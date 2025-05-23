@@ -77,7 +77,13 @@ const MainFeature = () => {
     }
   ]
   
+  // Placeholder leave requests
+  const placeholderLeaveRequests = [
+    {
+      id: "placeholder-1",
       employeeId: 1,
+      employeeName: "Sarah Johnson",
+      leaveType: "Annual Leave",
       employeeName: "Sarah Johnson",
       leaveType: "Annual Leave",
       startDate: "2024-01-20",
@@ -95,6 +101,7 @@ const MainFeature = () => {
       reason: "Medical appointment",
       status: "pending"
     }
+  ]
 
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false)
@@ -142,6 +149,7 @@ const MainFeature = () => {
       setCurrentTime(new Date())
     }, 1000)
     return () => clearInterval(timer)
+  }, [])
   
   const [newEmployee, setNewEmployee] = useState({
     firstName: '',
@@ -151,8 +159,7 @@ const MainFeature = () => {
     position: '',
     hireDate: format(new Date(), 'yyyy-MM-dd')
   })
-  
-  const [newEmployee, setNewEmployee] = useState({
+
   const [searchTerm, setSearchTerm] = useState('')
   const [filterDepartment, setFilterDepartment] = useState('all')
   const [showAddForm, setShowAddForm] = useState(false)
@@ -558,6 +565,8 @@ const MainFeature = () => {
   const handleClockIn = (employeeId) => {
     setClockingInOut(true);
 
+    const currentDate = format(new Date(), 'yyyy-MM-dd');
+    const currentTimeStr = format(new Date(), 'HH:mm');
     getAttendanceByEmployeeAndDate(employeeId, currentDate)
       .then(existingRecord => {
         if (existingRecord && existingRecord.clockIn) {
@@ -750,16 +759,8 @@ const MainFeature = () => {
         return format(new Date(dateString), 'MMM dd, yyyy');
       } catch (error) {
         return dateString;
-        clockOut: '',
-        totalHours: '',
-    {loadingEmployees && (
-      <div className="flex justify-center p-8">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    )}
-    
-    {employeesError && <div className="bg-red-50 text-red-600 p-4 rounded-lg">{employeesError}</div>}
-    
+      }
+    }
   };
     const matchesEmployee = attendanceFilter.employee === 'all' || record.employeeId === parseInt(attendanceFilter.employee)
     const matchesStatus = attendanceFilter.status === 'all' || record.status === attendanceFilter.status
@@ -1048,15 +1049,6 @@ const MainFeature = () => {
     {loadingProjects && (
       <div className="flex justify-center p-8">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    )}
-    
-    {projectsError && <div className="bg-red-50 text-red-600 p-4 rounded-lg">{projectsError}</div>}
-    
-                    
-                    <div className="flex items-center space-x-2">
-                      <button
-        { title: "Total Projects", value: projects?.length || 0, icon: "Briefcase", color: "from-blue-500 to-blue-600" },
         { title: "In Progress", value: projects?.filter(p => p.status === 'in-progress')?.length || 0, icon: "Play", color: "from-green-500 to-green-600" },
                       >
                         <ApperIcon name="Edit" className="w-4 h-4" />
@@ -1086,7 +1078,7 @@ const MainFeature = () => {
         <motion.div
                         {employee.email}
                       </span>
-                    </div>
+                      </div>
                     <div className="flex items-center space-x-2">
                       <ApperIcon name="Building" className="w-4 h-4 text-surface-400" />
                       <span className="text-surface-600 dark:text-surface-400">
@@ -1094,7 +1086,6 @@ const MainFeature = () => {
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-              <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">
                       <span className="text-surface-600 dark:text-surface-400">
                         Hired {format(new Date(employee.hireDate), 'MMM dd, yyyy')}
                       </span>
@@ -1125,7 +1116,7 @@ const MainFeature = () => {
                 <span className="text-surface-600 dark:text-surface-400">
           <motion.div
             key="projects"
-            initial={{ opacity: 0, x: 20 }}
+             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.4 }}
@@ -1268,8 +1259,6 @@ const MainFeature = () => {
             
             {projects.length === 0 && (
               <div className="text-center py-12">
-                src={employee.avatar}
-                <h3 className="text-xl font-semibold text-surface-900 dark:text-surface-100 mb-2">No projects found</h3>
                 <p className="text-surface-600 dark:text-surface-400">Create your first project to get started</p>
               </div>
             )}
@@ -1564,7 +1553,6 @@ const MainFeature = () => {
             <div key={request.Id} className="p-4 bg-surface-50 dark:bg-surface-700/50 rounded-2xl">
                 Leave Requests
               </h3>
-                  <h4 className="font-semibold text-surface-900 dark:text-surface-100">{getEmployeeName(request.employee)}</h4>
                 {leaveRequests.map((request) => (
                   <div key={request.id} className="p-4 bg-surface-50 dark:bg-surface-700/50 rounded-2xl">
                     <div className="flex items-start justify-between mb-3">
@@ -1572,7 +1560,6 @@ const MainFeature = () => {
                   onChange={(e) => handleLeaveStatusChange(request.Id, e.target.value)}
                         <p className="text-sm text-surface-600 dark:text-surface-400">{request.leaveType}</p>
                       </div>
-                      <select
                         value={request.status}
                         onChange={(e) => handleLeaveStatusChange(request.id, e.target.value)}
                         className={`px-2 py-1 text-xs font-medium rounded-lg border-0 ${leaveStatusColors[request.status]} cursor-pointer`}
@@ -1581,7 +1568,6 @@ const MainFeature = () => {
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
                       </select>
-                    {formatDate(request.startDate)} - {formatDate(request.endDate)}
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center space-x-2">
                         <ApperIcon name="Calendar" className="w-4 h-4 text-surface-400" />
@@ -1678,7 +1664,6 @@ const MainFeature = () => {
                     </div>
                     <h3 className="font-semibold text-surface-900 dark:text-surface-100">
                       {report.title}
-        { title: "Employee Directory Report", description: "Complete list of all employees with details", icon: "FileText", action: "Generate" },
                   </div>
                   <p className="text-sm text-surface-600 dark:text-surface-400 mb-4">
                     {report.description}
@@ -1753,7 +1738,6 @@ const MainFeature = () => {
                     type="tel"
                     value={createForm.phone}
                     onChange={(e) => setCreateForm({...createForm, phone: e.target.value})}
-              disabled={creatingEmployee}
                     className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                   />
                 </div>
@@ -1798,6 +1782,7 @@ const MainFeature = () => {
                 <button 
                   onClick={handleCreateEmployee}
                   className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                  disabled={creatingEmployee}
                 >
                   Create Employee
                 </button>
@@ -1816,7 +1801,6 @@ const MainFeature = () => {
         >
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
-              disabled={creatingEmployee}>
             className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl"
           >
             <div className="p-6">
@@ -1835,8 +1819,7 @@ const MainFeature = () => {
                   <label className="block text-sm font-medium text-surface-700 mb-2">Project Name *</label>
                   <input
                     type="text"
-              onClick={() => setShowCreateProjectModal(false)}
-              className="text-surface-400 hover:text-surface-600 transition-colors"
+                    value={createProjectForm.name}
                     className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                     placeholder="Enter project name"
                   />
@@ -1908,6 +1891,7 @@ const MainFeature = () => {
                 <button 
                   onClick={handleCreateProject}
                   className="flex-1 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary-dark transition-colors"
+                  disabled={creatingProject}
                 >
                   Create Project
                 </button>
@@ -1924,7 +1908,6 @@ const MainFeature = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-              disabled={creatingProject}>
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setEditingEmployee(null)}
           >
@@ -2042,6 +2025,7 @@ const MainFeature = () => {
                     <button
                       type="submit"
                       className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-xl hover:shadow-glow transition-all duration-300"
+                      disabled={updatingEmployee}
                     >
                       Update Employee
                     </button>
@@ -2055,5 +2039,4 @@ const MainFeature = () => {
     </motion.div>
   )
 }
-                  disabled={updatingEmployee}>
 export default MainFeature
