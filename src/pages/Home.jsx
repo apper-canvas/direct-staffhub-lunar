@@ -1,10 +1,17 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useSelector, useDispatch } from 'react-redux'
 import MainFeature from '../components/MainFeature'
 import ApperIcon from '../components/ApperIcon'
+import { useContext } from 'react'
+import { AuthContext } from '../App'
 
 const Home = () => {
   const [darkMode, setDarkMode] = useState(false)
+  const { isAuthenticated } = useSelector(state => state.user)
+  const navigate = useNavigate()
+  const { logout } = useContext(AuthContext)
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode)
@@ -37,6 +44,10 @@ const Home = () => {
       <header className="relative z-10 px-4 sm:px-6 lg:px-8 py-6">
         <nav className="flex items-center justify-between max-w-7xl mx-auto">
           <motion.div 
+            onClick={() => navigate('/')}
+            className="flex items-center space-x-3 cursor-pointer"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
             className="flex items-center space-x-3"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -55,7 +66,25 @@ const Home = () => {
             </div>
           </motion.div>
 
-          <motion.button
+          <div className="flex items-center space-x-3">
+            {isAuthenticated && (
+              <motion.button
+                onClick={logout}
+                className="flex items-center space-x-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 transition-colors duration-200"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <ApperIcon 
+                  name="LogOut" 
+                  className="w-4 h-4" 
+                />
+                <span>Logout</span>
+              </motion.button>
+            )}
+            <motion.button
             onClick={toggleDarkMode}
             className="p-2 sm:p-3 rounded-2xl bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm border border-surface-200 dark:border-surface-700 hover:shadow-glow transition-all duration-300"
             initial={{ opacity: 0, x: 20 }}
@@ -68,6 +97,7 @@ const Home = () => {
               name={darkMode ? "Sun" : "Moon"} 
               className="w-5 h-5 sm:w-6 sm:h-6 text-surface-700 dark:text-surface-300" 
             />
+          </div>
           </motion.button>
         </nav>
       </header>

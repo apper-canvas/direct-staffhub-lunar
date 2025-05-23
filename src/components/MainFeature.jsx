@@ -1,52 +1,59 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'react-toastify'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import ApperIcon from './ApperIcon'
+import { useSelector } from 'react-redux'
+
+// Import services
+import { fetchEmployees, createEmployee, updateEmployee, deleteEmployee } from '../services/employeeService'
+import { fetchProjects, createProject, updateProject, deleteProject } from '../services/projectService'
+import { fetchAttendanceRecords, createAttendanceRecord, updateAttendanceRecord, getAttendanceByEmployeeAndDate } from '../services/attendanceService'
+import { fetchLeaveRequests, createLeaveRequest, updateLeaveRequest } from '../services/leaveRequestService'
+import { fetchProjectMembers, addEmployeesToProject } from '../services/projectMemberService'
+import { fetchDepartments } from '../services/departmentService'
 
 const MainFeature = () => {
   const [activeTab, setActiveTab] = useState('employee')
+  const { isAuthenticated, user } = useSelector(state => state.user)
   
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      firstName: "Sarah",
-      lastName: "Johnson",
-      email: "sarah.johnson@staffhub.com",
-      department: "Engineering",
-      position: "Senior Developer",
-      status: "active",
-      hireDate: "2023-01-15",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
-    },
-    {
-      id: 2,
-      firstName: "Michael",
-      lastName: "Chen",
-      email: "michael.chen@staffhub.com",
-      department: "Design",
-      position: "UX Designer",
-      status: "active",
-      hireDate: "2023-03-22",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-    },
-    {
-      id: 3,
-      firstName: "Emily",
-      lastName: "Rodriguez",
-      email: "emily.rodriguez@staffhub.com",
-      department: "Marketing",
-      position: "Marketing Manager",
-      status: "onLeave",
-      hireDate: "2022-11-08",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-    }
-  ])
+  // Data states
+  const [employees, setEmployees] = useState([])
+  const [projects, setProjects] = useState([])
+  const [attendanceRecords, setAttendanceRecords] = useState([])
+  const [leaveRequests, setLeaveRequests] = useState([])
+  const [projectMembers, setProjectMembers] = useState([])
+  const [departments, setDepartments] = useState([])
 
-  const [projects, setProjects] = useState([
+  // Loading states
+  const [loadingEmployees, setLoadingEmployees] = useState(false)
+  const [loadingProjects, setLoadingProjects] = useState(false)
+  const [loadingAttendance, setLoadingAttendance] = useState(false)
+  const [loadingLeaveRequests, setLoadingLeaveRequests] = useState(false)
+  const [loadingProjectMembers, setLoadingProjectMembers] = useState(false)
+  const [loadingDepartments, setLoadingDepartments] = useState(false)
+  
+  // Action loading states
+  const [creatingEmployee, setCreatingEmployee] = useState(false)
+  const [updatingEmployee, setUpdatingEmployee] = useState(false)
+  const [deletingEmployee, setDeletingEmployee] = useState(false)
+  const [creatingProject, setCreatingProject] = useState(false)
+  const [updatingProject, setUpdatingProject] = useState(false)
+  const [deletingProject, setDeletingProject] = useState(false)
+  const [submittingLeave, setSubmittingLeave] = useState(false)
+  const [clockingInOut, setClockingInOut] = useState(false)
+  
+  // Error states
+  const [employeesError, setEmployeesError] = useState(null)
+  const [projectsError, setProjectsError] = useState(null)
+  const [attendanceError, setAttendanceError] = useState(null)
+  const [leaveRequestsError, setLeaveRequestsError] = useState(null)
+  
+  // Placeholder data for fallback
+  const placeholderProjects = [
     {
-      id: 1,
-      name: "Employee Portal Redesign",
+      Id: "placeholder-1",
+      Name: "Employee Portal Redesign",
       description: "Modernize the employee self-service portal with new UI/UX",
       status: "in-progress",
       priority: "high",
@@ -57,8 +64,8 @@ const MainFeature = () => {
       budget: 75000
     },
     {
-      id: 2,
-      name: "HR Analytics Dashboard",
+      Id: "placeholder-2",
+      Name: "HR Analytics Dashboard",
       description: "Build comprehensive analytics dashboard for HR metrics",
       status: "planning",
       priority: "medium",
@@ -68,36 +75,8 @@ const MainFeature = () => {
       progress: 15,
       budget: 45000
     }
-  ])
-
-  const [attendanceRecords, setAttendanceRecords] = useState([
-    {
-      id: 1,
-      employeeId: 1,
-      employeeName: "Sarah Johnson",
-      date: "2024-01-15",
-      clockIn: "09:00",
-      clockOut: "17:30",
-      breakTime: "01:00",
-      totalHours: "7.5",
-      status: "present"
-    },
-    {
-      id: 2,
-      employeeId: 2,
-      employeeName: "Michael Chen",
-      date: "2024-01-15",
-      clockIn: "",
-      clockOut: "",
-      breakTime: "",
-      totalHours: "",
-      status: "absent"
-    }
-  ])
+  ]
   
-  const [leaveRequests, setLeaveRequests] = useState([
-    {
-      id: 1,
       employeeId: 1,
       employeeName: "Sarah Johnson",
       leaveType: "Annual Leave",
@@ -108,8 +87,6 @@ const MainFeature = () => {
       status: "approved"
     },
     {
-      id: 2,
-      employeeId: 2,
       employeeName: "Michael Chen",
       leaveType: "Sick Leave",
       startDate: "2024-01-18",
@@ -118,7 +95,6 @@ const MainFeature = () => {
       reason: "Medical appointment",
       status: "pending"
     }
-  ])
 
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false)
@@ -166,7 +142,6 @@ const MainFeature = () => {
       setCurrentTime(new Date())
     }, 1000)
     return () => clearInterval(timer)
-  }, [])
   
   const [newEmployee, setNewEmployee] = useState({
     firstName: '',
@@ -176,7 +151,8 @@ const MainFeature = () => {
     position: '',
     hireDate: format(new Date(), 'yyyy-MM-dd')
   })
-
+  
+  const [newEmployee, setNewEmployee] = useState({
   const [searchTerm, setSearchTerm] = useState('')
   const [filterDepartment, setFilterDepartment] = useState('all')
   const [showAddForm, setShowAddForm] = useState(false)
@@ -190,7 +166,6 @@ const MainFeature = () => {
     hireDate: ''
   })
 
-  const departments = ['Engineering', 'Design', 'Marketing', 'Sales', 'HR', 'Finance']
   const statusColors = {
     active: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
     onLeave: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
@@ -212,35 +187,175 @@ const MainFeature = () => {
     rejected: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
   }
 
+  // Load initial data
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadEmployees();
+      loadDepartments();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'projects') {
+      loadProjects();
+      loadProjectMembers();
+    }
+  }, [isAuthenticated, activeTab]);
+
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'attendance') {
+      loadAttendanceRecords();
+      loadLeaveRequests();
+    }
+  }, [isAuthenticated, activeTab]);
+
+  // Data loading functions
+  const loadEmployees = async () => {
+    setLoadingEmployees(true);
+    setEmployeesError(null);
+    try {
+      const data = await fetchEmployees();
+      setEmployees(data);
+    } catch (error) {
+      console.error('Failed to load employees:', error);
+      setEmployeesError('Failed to load employees. Please try again.');
+      toast.error('Failed to load employees');
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
+
+  const loadProjects = async () => {
+    setLoadingProjects(true);
+    setProjectsError(null);
+    try {
+      const data = await fetchProjects();
+      setProjects(data);
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+      setProjectsError('Failed to load projects. Please try again.');
+      toast.error('Failed to load projects');
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
+  const loadAttendanceRecords = async () => {
+    setLoadingAttendance(true);
+    setAttendanceError(null);
+    try {
+      const currentDate = format(new Date(), 'yyyy-MM-dd');
+      const data = await fetchAttendanceRecords({ date: currentDate });
+      setAttendanceRecords(data);
+      
+      // Set which employees are clocked in
+      const clockedInIds = new Set(
+        data
+          .filter(record => record.clockIn && !record.clockOut)
+          .map(record => record.employee)
+      );
+      setClockedInEmployees(clockedInIds);
+    } catch (error) {
+      console.error('Failed to load attendance records:', error);
+      setAttendanceError('Failed to load attendance records. Please try again.');
+      toast.error('Failed to load attendance records');
+    } finally {
+      setLoadingAttendance(false);
+    }
+  };
+
+  const loadLeaveRequests = async () => {
+    setLoadingLeaveRequests(true);
+    setLeaveRequestsError(null);
+    try {
+      const data = await fetchLeaveRequests();
+      setLeaveRequests(data);
+    } catch (error) {
+      console.error('Failed to load leave requests:', error);
+      setLeaveRequestsError('Failed to load leave requests. Please try again.');
+      toast.error('Failed to load leave requests');
+    } finally {
+      setLoadingLeaveRequests(false);
+    }
+  };
+
+  const loadProjectMembers = async () => {
+    setLoadingProjectMembers(true);
+    try {
+      const data = await fetchProjectMembers();
+      setProjectMembers(data);
+    } catch (error) {
+      console.error('Failed to load project members:', error);
+      toast.error('Failed to load project team members');
+    } finally {
+      setLoadingProjectMembers(false);
+    }
+  };
+
+  const loadDepartments = async () => {
+    setLoadingDepartments(true);
+    try {
+      const data = await fetchDepartments();
+      // If no departments in the database, use the predefined list
+      if (data.length === 0) {
+        setDepartments(['Engineering', 'Design', 'Marketing', 'Sales', 'HR', 'Finance']);
+      } else {
+        setDepartments(data.map(dept => dept.Name));
+      }
+    } catch (error) {
+      console.error('Failed to load departments:', error);
+      // Fallback to predefined list
+      setDepartments(['Engineering', 'Design', 'Marketing', 'Sales', 'HR', 'Finance']);
+    } finally {
+      setLoadingDepartments(false);
+    }
+  };
+
+  // Create/Update/Delete functions
+  
   const handleCreateEmployee = () => {
     if (!createForm.name || !createForm.email || !createForm.department) {
       toast.error('Please fill in all required fields')
       return
     }
+    
+    setCreatingEmployee(true);
 
-    const newEmployee = {
-      id: employees.length + 1,
+    const employeeData = {
+      Name: createForm.name,
       firstName: createForm.name.split(' ')[0],
       lastName: createForm.name.split(' ').slice(1).join(' ') || 'N/A',
       email: createForm.email,
+      phone: createForm.phone || '',
       department: createForm.department,
       position: createForm.position || 'Employee',
       status: 'active',
       hireDate: createForm.startDate || new Date().toISOString().split('T')[0],
-      avatar: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000000)}?w=150&h=150&fit=crop&crop=face`
+      avatar: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000000)}?w=150&h=150&fit=crop&crop=face`,
+      Owner: user?.emailAddress
     }
 
-    setEmployees([...employees, newEmployee])
-    setCreateForm({
-      name: '',
-      email: '',
-      phone: '',
-      department: '',
-      position: '',
-      startDate: ''
-    })
-    setShowCreateModal(false)
-    toast.success('Employee created successfully!')
+    createEmployee(employeeData)
+      .then(newEmployee => {
+        setEmployees(prev => [...prev, newEmployee]);
+        setCreateForm({
+          name: '',
+          email: '',
+          phone: '',
+          department: '',
+          position: '',
+          startDate: ''
+        });
+        setShowCreateModal(false);
+        toast.success('Employee created successfully!');
+      })
+      .catch(error => {
+        console.error('Error creating employee:', error);
+        toast.error('Failed to create employee');
+      })
+      .finally(() => {
+        setCreatingEmployee(false);
+      });
   }
 
   const handleCreateProject = () => {
@@ -248,21 +363,44 @@ const MainFeature = () => {
       toast.error('Please fill in required fields')
       return
     }
+    
+    setCreatingProject(true);
 
-    const newProject = {
-      id: projects.length + 1,
-      ...createProjectForm,
+    const projectData = {
+      Name: createProjectForm.name,
+      description: createProjectForm.description,
+      priority: createProjectForm.priority,
+      startDate: createProjectForm.startDate,
+      endDate: createProjectForm.endDate,
       status: 'planning',
       progress: 0,
-      budget: parseInt(createProjectForm.budget) || 0
+      budget: parseInt(createProjectForm.budget) || 0,
+      Owner: user?.emailAddress
     }
 
-    setProjects([...projects, newProject])
-    setCreateProjectForm({
-      name: '', description: '', priority: 'medium', startDate: '', endDate: '', teamMembers: [], budget: ''
-    })
-    setShowCreateProjectModal(false)
-    toast.success('Project created successfully!')
+    createProject(projectData)
+      .then(newProject => {
+        setProjects(prev => [...prev, newProject]);
+        
+        // If team members were selected, add them to the project
+        if (createProjectForm.teamMembers && createProjectForm.teamMembers.length > 0) {
+          return addEmployeesToProject(newProject.Id, createProjectForm.teamMembers);
+        }
+      })
+      .then(() => {
+        setCreateProjectForm({
+          name: '', description: '', priority: 'medium', startDate: '', endDate: '', teamMembers: [], budget: ''
+        });
+        setShowCreateProjectModal(false);
+        toast.success('Project created successfully!');
+      })
+      .catch(error => {
+        console.error('Error creating project:', error);
+        toast.error('Failed to create project');
+      })
+      .finally(() => {
+        setCreatingProject(false);
+      });
   }
 
   const handleAddEmployee = (e) => {
@@ -272,37 +410,70 @@ const MainFeature = () => {
       toast.error('Please fill in all required fields')
       return
     }
+    
+    setCreatingEmployee(true);
 
-    const emailExists = employees.some(emp => emp.email.toLowerCase() === newEmployee.email.toLowerCase())
+    const emailExists = employees.some(emp => emp.email?.toLowerCase() === newEmployee.email.toLowerCase())
     if (emailExists) {
       toast.error('Employee with this email already exists')
+      setCreatingEmployee(false);
       return
     }
 
-    const employee = {
-      id: Date.now(),
-      ...newEmployee,
+    const employeeData = {
+      Name: `${newEmployee.firstName} ${newEmployee.lastName}`,
+      firstName: newEmployee.firstName,
+      lastName: newEmployee.lastName,
+      email: newEmployee.email,
+      department: newEmployee.department,
+      position: newEmployee.position,
+      hireDate: newEmployee.hireDate,
       status: 'active',
-      avatar: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000000)}?w=150&h=150&fit=crop&crop=face`
+      avatar: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000000)}?w=150&h=150&fit=crop&crop=face`,
+      Owner: user?.emailAddress
     }
 
-    setEmployees(prev => [...prev, employee])
-    setNewEmployee({
-      firstName: '',
-      lastName: '',
-      email: '',
-      department: '',
-      position: '',
-      hireDate: format(new Date(), 'yyyy-MM-dd')
-    })
-    setShowAddForm(false)
-    toast.success(`Employee ${employee.firstName} ${employee.lastName} added successfully!`)
+    createEmployee(employeeData)
+      .then(newEmp => {
+        setEmployees(prev => [...prev, newEmp]);
+        setNewEmployee({
+          firstName: '',
+          lastName: '',
+          email: '',
+          department: '',
+          position: '',
+          hireDate: format(new Date(), 'yyyy-MM-dd')
+        });
+        setShowAddForm(false);
+        toast.success(`Employee ${newEmp.firstName} ${newEmp.lastName} added successfully!`);
+      })
+      .catch(error => {
+        console.error('Error adding employee:', error);
+        toast.error('Failed to add employee');
+      })
+      .finally(() => {
+        setCreatingEmployee(false);
+      });
   }
 
   const handleDeleteEmployee = (id) => {
-    const employee = employees.find(emp => emp.id === id)
-    setEmployees(prev => prev.filter(emp => emp.id !== id))
-    toast.success(`Employee ${employee.firstName} ${employee.lastName} removed successfully`)
+    const employee = employees.find(emp => emp.Id === id);
+    if (!employee) return;
+    
+    setDeletingEmployee(true);
+    
+    deleteEmployee(id)
+      .then(() => {
+        setEmployees(prev => prev.filter(emp => emp.Id !== id));
+        toast.success(`Employee ${employee.firstName} ${employee.lastName} removed successfully`);
+      })
+      .catch(error => {
+        console.error('Error deleting employee:', error);
+        toast.error('Failed to delete employee');
+      })
+      .finally(() => {
+        setDeletingEmployee(false);
+      });
   }
 
   const handleEditEmployee = (employee) => {
@@ -324,162 +495,272 @@ const MainFeature = () => {
       toast.error('Please fill in all required fields')
       return
     }
+    
+    setUpdatingEmployee(true);
 
-    const emailExists = employees.some(emp => emp.id !== editingEmployee.id && emp.email.toLowerCase() === editForm.email.toLowerCase())
+    const emailExists = employees.some(emp => emp.Id !== editingEmployee.Id && emp.email?.toLowerCase() === editForm.email.toLowerCase())
     if (emailExists) {
       toast.error('Employee with this email already exists')
+      setUpdatingEmployee(false);
       return
     }
 
-    setEmployees(prev => prev.map(emp => 
-      emp.id === editingEmployee.id ? { ...emp, ...editForm } : emp
-    ))
-    
-    setEditingEmployee(null)
-    setEditForm({ firstName: '', lastName: '', email: '', department: '', position: '', hireDate: '' })
-    toast.success(`Employee ${editForm.firstName} ${editForm.lastName} updated successfully!`)
+    const updatedEmployeeData = {
+      ...editForm,
+      Name: `${editForm.firstName} ${editForm.lastName}`
+    };
+
+    updateEmployee(editingEmployee.Id, updatedEmployeeData)
+      .then(updatedEmp => {
+        setEmployees(prev => prev.map(emp => 
+          emp.Id === editingEmployee.Id ? { ...emp, ...updatedEmp } : emp
+        ));
+        setEditingEmployee(null);
+        setEditForm({ firstName: '', lastName: '', email: '', department: '', position: '', hireDate: '' });
+        toast.success(`Employee ${editForm.firstName} ${editForm.lastName} updated successfully!`);
+      })
+      .catch(error => {
+        console.error('Error updating employee:', error);
+        toast.error('Failed to update employee');
+      })
+      .finally(() => {
+        setUpdatingEmployee(false);
+      });
   }
 
   const handleStatusChange = (id, newStatus) => {
-    setEmployees(prev => prev.map(emp => 
-      emp.id === id ? { ...emp, status: newStatus } : emp
-    ))
-    const employee = employees.find(emp => emp.id === id)
-    toast.success(`${employee.firstName} ${employee.lastName} status updated to ${newStatus}`)
+    const employee = employees.find(emp => emp.Id === id);
+    if (!employee) return;
+    
+    setUpdatingEmployee(true);
+    
+    updateEmployee(id, { status: newStatus })
+      .then(() => {
+        setEmployees(prev => prev.map(emp => emp.Id === id ? { ...emp, status: newStatus } : emp));
+        toast.success(`${employee.firstName} ${employee.lastName} status updated to ${newStatus}`);
+      })
+      .catch(error => {
+        console.error('Error updating employee status:', error);
+        toast.error('Failed to update employee status');
+      })
+      .finally(() => {
+        setUpdatingEmployee(false);
+      });
   }
 
   const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = `${employee.firstName} ${employee.lastName} ${employee.email}`.toLowerCase().includes(searchTerm.toLowerCase())
+    const fullText = `${employee.firstName || ''} ${employee.lastName || ''} ${employee.email || ''}`.toLowerCase();
+    const matchesSearch = fullText.includes(searchTerm.toLowerCase())
     const matchesDepartment = filterDepartment === 'all' || employee.department === filterDepartment
     return matchesSearch && matchesDepartment
   })
 
   const handleClockIn = (employeeId) => {
-    const employee = employees.find(emp => emp.id === employeeId)
-    const currentDate = format(new Date(), 'yyyy-MM-dd')
-    const currentTimeStr = format(new Date(), 'HH:mm')
-    
-    // Check if already clocked in today
-    const existingRecord = attendanceRecords.find(record => 
-      record.employeeId === employeeId && record.date === currentDate
-    )
-    
-    if (existingRecord && existingRecord.clockIn) {
-      toast.warning(`${employee.firstName} ${employee.lastName} already clocked in today`)
-      return
-    }
-    
-    if (existingRecord) {
-      // Update existing record
-      setAttendanceRecords(prev => prev.map(record =>
-        record.id === existingRecord.id
-          ? { ...record, clockIn: currentTimeStr, status: 'present' }
-          : record
-      ))
-    } else {
-      // Create new record
-      const newRecord = {
-        id: Date.now(),
-        employeeId,
-        employeeName: `${employee.firstName} ${employee.lastName}`,
-        date: currentDate,
-        clockIn: currentTimeStr,
-        clockOut: '',
-        breakTime: '',
-        totalHours: '',
-        status: 'present'
-      }
-      setAttendanceRecords(prev => [...prev, newRecord])
-    }
-    
-    setClockedInEmployees(prev => new Set([...prev, employeeId]))
-    toast.success(`${employee.firstName} ${employee.lastName} clocked in successfully at ${currentTimeStr}`)
-  }
-  
+    setClockingInOut(true);
+
+    getAttendanceByEmployeeAndDate(employeeId, currentDate)
+      .then(existingRecord => {
+        if (existingRecord && existingRecord.clockIn) {
+          toast.warning(`${employee.firstName} ${employee.lastName} already clocked in today`);
+          setClockingInOut(false);
+          return Promise.reject('Already clocked in');
+        }
+
+        if (existingRecord) {
+          // Update existing record
+          return updateAttendanceRecord(existingRecord.Id, { 
+            clockIn: currentTimeStr,
+            status: 'present'
+          });
+        } else {
+          // Create new record
+          const recordData = {
+            Name: `Attendance-${employeeId}-${currentDate}`,
+            employee: employeeId,
+            date: currentDate,
+            clockIn: currentTimeStr,
+            status: 'present',
+            Owner: user?.emailAddress
+          };
+          return createAttendanceRecord(recordData);
+        }
+      })
+      .then(record => {
+        // Refresh attendance records
+        loadAttendanceRecords();
+        
+        // Update UI immediately
+        setClockedInEmployees(prev => new Set([...prev, employeeId]));
+        toast.success(`${employee.firstName} ${employee.lastName} clocked in successfully at ${currentTimeStr}`);
+      })
+      .catch(error => {
+        if (error !== 'Already clocked in') {
+          console.error('Error clocking in:', error);
+          toast.error('Failed to clock in');
+        }
+      })
+      .finally(() => {
+        setClockingInOut(false);
+      });
+  };
+
   const handleClockOut = (employeeId) => {
-    const employee = employees.find(emp => emp.id === employeeId)
-    const currentDate = format(new Date(), 'yyyy-MM-dd')
-    const currentTimeStr = format(new Date(), 'HH:mm')
+    const employee = employees.find(emp => emp.Id === employeeId);
+    if (!employee) return;
     
-    const existingRecord = attendanceRecords.find(record => 
-      record.employeeId === employeeId && record.date === currentDate
-    )
+    const currentDate = format(new Date(), 'yyyy-MM-dd');
+    const currentTimeStr = format(new Date(), 'HH:mm');
     
-    if (!existingRecord || !existingRecord.clockIn) {
-      toast.error(`${employee.firstName} ${employee.lastName} must clock in first`)
-      return
-    }
-    
-    if (existingRecord.clockOut) {
-      toast.warning(`${employee.firstName} ${employee.lastName} already clocked out today`)
-      return
-    }
-    
-    // Calculate total hours
-    const clockInTime = new Date(`2024-01-01 ${existingRecord.clockIn}`)
-    const clockOutTime = new Date(`2024-01-01 ${currentTimeStr}`)
-    const diffMs = clockOutTime - clockInTime
-    const totalHours = (diffMs / (1000 * 60 * 60)).toFixed(2)
-    
-    setAttendanceRecords(prev => prev.map(record =>
-      record.id === existingRecord.id
-        ? { ...record, clockOut: currentTimeStr, totalHours }
-        : record
-    ))
-    
-    setClockedInEmployees(prev => {
-      const newSet = new Set(prev)
-      newSet.delete(employeeId)
-      return newSet
-    })
-    
-    toast.success(`${employee.firstName} ${employee.lastName} clocked out successfully at ${currentTimeStr}`)
-  }
-  
+    setClockingInOut(true);
+
+    getAttendanceByEmployeeAndDate(employeeId, currentDate)
+      .then(existingRecord => {
+        if (!existingRecord || !existingRecord.clockIn) {
+          toast.error(`${employee.firstName} ${employee.lastName} must clock in first`);
+          setClockingInOut(false);
+          return Promise.reject('Not clocked in');
+        }
+
+        if (existingRecord.clockOut) {
+          toast.warning(`${employee.firstName} ${employee.lastName} already clocked out today`);
+          setClockingInOut(false);
+          return Promise.reject('Already clocked out');
+        }
+
+        // Calculate total hours
+        const clockInTime = new Date(`2024-01-01 ${existingRecord.clockIn}`);
+        const clockOutTime = new Date(`2024-01-01 ${currentTimeStr}`);
+        const diffMs = clockOutTime - clockInTime;
+        const totalHours = (diffMs / (1000 * 60 * 60)).toFixed(2);
+
+        return updateAttendanceRecord(existingRecord.Id, {
+          clockOut: currentTimeStr,
+          totalHours: totalHours
+        });
+      })
+      .then(record => {
+        // Refresh attendance records
+        loadAttendanceRecords();
+        
+        // Update UI immediately
+        setClockedInEmployees(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(employeeId);
+          return newSet;
+        });
+        
+        toast.success(`${employee.firstName} ${employee.lastName} clocked out successfully at ${currentTimeStr}`);
+      })
+      .catch(error => {
+        if (error !== 'Not clocked in' && error !== 'Already clocked out') {
+          console.error('Error clocking out:', error);
+          toast.error('Failed to clock out');
+        }
+      })
+      .finally(() => {
+        setClockingInOut(false);
+      });
+  };
+
   const handleLeaveRequest = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     
     if (!newLeaveRequest.employeeId || !newLeaveRequest.leaveType || !newLeaveRequest.startDate || !newLeaveRequest.endDate) {
-      toast.error('Please fill in all required fields')
-      return
+      toast.error('Please fill in all required fields');
+      return;
     }
     
-    const employee = employees.find(emp => emp.id === parseInt(newLeaveRequest.employeeId))
-    const startDate = new Date(newLeaveRequest.startDate)
-    const endDate = new Date(newLeaveRequest.endDate)
-    const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
+    setSubmittingLeave(true);
     
-    const leaveRequest = {
-      id: Date.now(),
-      ...newLeaveRequest,
-      employeeId: parseInt(newLeaveRequest.employeeId),
-      employeeName: `${employee.firstName} ${employee.lastName}`,
-      days,
-      status: 'pending'
-    }
+    const employee = employees.find(emp => emp.Id === parseInt(newLeaveRequest.employeeId));
+    const startDate = new Date(newLeaveRequest.startDate);
+    const endDate = new Date(newLeaveRequest.endDate);
+    const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
     
-    setLeaveRequests(prev => [...prev, leaveRequest])
-    setNewLeaveRequest({
-      employeeId: '',
-      leaveType: '',
-      startDate: '',
-      endDate: '',
-      reason: ''
-    })
-    setShowLeaveForm(false)
-    toast.success(`Leave request submitted for ${employee.firstName} ${employee.lastName}`)
-  }
-  
+    const leaveData = {
+      Name: `Leave-${employee.firstName}-${employee.lastName}-${newLeaveRequest.leaveType}`,
+      employee: parseInt(newLeaveRequest.employeeId),
+      leaveType: newLeaveRequest.leaveType,
+      startDate: newLeaveRequest.startDate,
+      endDate: newLeaveRequest.endDate,
+      reason: newLeaveRequest.reason,
+      days: days,
+      status: 'pending',
+      Owner: user?.emailAddress
+    };
+    
+    createLeaveRequest(leaveData)
+      .then(newRequest => {
+        setLeaveRequests(prev => [...prev, newRequest]);
+        setNewLeaveRequest({
+          employeeId: '',
+          leaveType: '',
+          startDate: '',
+          endDate: '',
+          reason: ''
+        });
+        setShowLeaveForm(false);
+        toast.success(`Leave request submitted for ${employee.firstName} ${employee.lastName}`);
+      })
+      .catch(error => {
+        console.error('Error submitting leave request:', error);
+        toast.error('Failed to submit leave request');
+      })
+      .finally(() => {
+        setSubmittingLeave(false);
+      });
+  };
+
   const handleLeaveStatusChange = (requestId, newStatus) => {
-    setLeaveRequests(prev => prev.map(request =>
-      request.id === requestId ? { ...request, status: newStatus } : request
-    ))
-    const request = leaveRequests.find(req => req.id === requestId)
-    toast.success(`Leave request for ${request.employeeName} ${newStatus}`)
-  }
-  
+    const request = leaveRequests.find(req => req.Id === requestId);
+    if (!request) return;
+    
+    updateLeaveRequest(requestId, { status: newStatus })
+      .then(() => {
+        setLeaveRequests(prev => prev.map(req => 
+          req.Id === requestId ? { ...req, status: newStatus } : req
+        ));
+        toast.success(`Leave request for ${request.Name} ${newStatus}`);
+      })
+      .catch(error => {
+        console.error('Error updating leave request status:', error);
+        toast.error('Failed to update leave request status');
+      });
+  };
+
   const filteredAttendanceRecords = attendanceRecords.filter(record => {
-    const matchesDate = !attendanceFilter.date || record.date === attendanceFilter.date
+    const matchesDate = !attendanceFilter.date || record.date === attendanceFilter.date;
+    const matchesEmployee = attendanceFilter.employee === 'all' || record.employee === parseInt(attendanceFilter.employee);
+    const matchesStatus = attendanceFilter.status === 'all' || record.status === attendanceFilter.status;
+    return matchesDate && matchesEmployee && matchesStatus;
+  });
+
+  // Helper to get employee name from ID
+  const getEmployeeName = (employeeId) => {
+    const employee = employees.find(emp => emp.Id === employeeId);
+    return employee ? `${employee.firstName} ${employee.lastName}` : 'Unknown Employee';
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    try {
+      return format(parseISO(dateString), 'MMM dd, yyyy');
+    } catch (error) {
+      try {
+        return format(new Date(dateString), 'MMM dd, yyyy');
+      } catch (error) {
+        return dateString;
+        clockOut: '',
+        totalHours: '',
+    {loadingEmployees && (
+      <div className="flex justify-center p-8">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )}
+    
+    {employeesError && <div className="bg-red-50 text-red-600 p-4 rounded-lg">{employeesError}</div>}
+    
+  };
     const matchesEmployee = attendanceFilter.employee === 'all' || record.employeeId === parseInt(attendanceFilter.employee)
     const matchesStatus = attendanceFilter.status === 'all' || record.status === attendanceFilter.status
     return matchesDate && matchesEmployee && matchesStatus
@@ -651,7 +932,7 @@ const MainFeature = () => {
                           required
                         />
                       </div>
-                      
+            key={employee.Id}
                       <div>
                         <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
                           Last Name *
@@ -687,23 +968,23 @@ const MainFeature = () => {
                           onChange={(e) => setNewEmployee(prev => ({...prev, department: e.target.value}))}
                           className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
                           required
-                        >
+                  className={`p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200 ${updatingEmployee ? 'opacity-50 cursor-not-allowed' : ''}`}
                           <option value="">Select Department</option>
                           {departments.map(dept => (
                             <option key={dept} value={dept}>{dept}</option>
                           ))}
                         </select>
-                      </div>
+                  onChange={(e) => handleStatusChange(employee.Id, e.target.value)}
                       
                       <div>
-                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                  <option value="active">Active</option>
                           Position *
                         </label>
                         <input
                           type="text"
                           value={newEmployee.position}
-                          onChange={(e) => setNewEmployee(prev => ({...prev, position: e.target.value}))}
-                          className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                  onClick={() => handleDeleteEmployee(employee.Id)}
+                  className={`p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200 ${deletingEmployee ? 'opacity-50 cursor-not-allowed' : ''}`}
                           required
                         />
                       </div>
@@ -764,11 +1045,19 @@ const MainFeature = () => {
                         </p>
                       </div>
                     </div>
+    {loadingProjects && (
+      <div className="flex justify-center p-8">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )}
+    
+    {projectsError && <div className="bg-red-50 text-red-600 p-4 rounded-lg">{projectsError}</div>}
+    
                     
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => handleEditEmployee(employee)}
-                        className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
+        { title: "Total Projects", value: projects?.length || 0, icon: "Briefcase", color: "from-blue-500 to-blue-600" },
+        { title: "In Progress", value: projects?.filter(p => p.status === 'in-progress')?.length || 0, icon: "Play", color: "from-green-500 to-green-600" },
                       >
                         <ApperIcon name="Edit" className="w-4 h-4" />
                       </button>
@@ -794,7 +1083,7 @@ const MainFeature = () => {
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center space-x-2">
                       <ApperIcon name="Mail" className="w-4 h-4 text-surface-400" />
-                      <span className="text-surface-600 dark:text-surface-400 truncate">
+        <motion.div
                         {employee.email}
                       </span>
                     </div>
@@ -805,7 +1094,7 @@ const MainFeature = () => {
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <ApperIcon name="Calendar" className="w-4 h-4 text-surface-400" />
+              <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">
                       <span className="text-surface-600 dark:text-surface-400">
                         Hired {format(new Date(employee.hireDate), 'MMM dd, yyyy')}
                       </span>
@@ -833,7 +1122,7 @@ const MainFeature = () => {
           </motion.div>
         )}
 
-        {activeTab === 'projects' && (
+                <span className="text-surface-600 dark:text-surface-400">
           <motion.div
             key="projects"
             initial={{ opacity: 0, x: 20 }}
@@ -904,6 +1193,14 @@ const MainFeature = () => {
                       <div 
                         className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-300"
                         style={{ width: `${project.progress}%` }}
+  >
+    {loadingAttendance && (
+      <div className="flex justify-center p-8">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )}
+    
+    {attendanceError && <div className="bg-red-50 text-red-600 p-4 rounded-lg">{attendanceError}</div>}
                       />
                     </div>
                     
@@ -971,7 +1268,7 @@ const MainFeature = () => {
             
             {projects.length === 0 && (
               <div className="text-center py-12">
-                <ApperIcon name="Briefcase" className="w-16 h-16 text-surface-400 mx-auto mb-4" />
+                src={employee.avatar}
                 <h3 className="text-xl font-semibold text-surface-900 dark:text-surface-100 mb-2">No projects found</h3>
                 <p className="text-surface-600 dark:text-surface-400">Create your first project to get started</p>
               </div>
@@ -1237,16 +1534,16 @@ const MainFeature = () => {
                       <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Employee</th>
                       <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Date</th>
                       <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Clock In</th>
-                      <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Clock Out</th>
+            {filteredAttendanceRecords?.map((record) => (
                       <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Total Hours</th>
-                      <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Status</th>
-                    </tr>
+                <td className="py-3 px-4 text-surface-900 dark:text-surface-100">{getEmployeeName(record.employee)}</td>
+                <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{formatDate(record.date)}</td>
                   </thead>
                   <tbody>
                     {filteredAttendanceRecords.map((record) => (
                       <tr key={record.id} className="border-b border-surface-100 dark:border-surface-700/50 hover:bg-surface-50 dark:hover:bg-surface-700/30 transition-colors duration-200">
                         <td className="py-3 px-4 text-surface-900 dark:text-surface-100">{record.employeeName}</td>
-                        <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{format(new Date(record.date), 'MMM dd, yyyy')}</td>
+                    {record.status?.charAt(0).toUpperCase() + record.status?.slice(1)}
                         <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{record.clockIn || '-'}</td>
                         <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{record.clockOut || '-'}</td>
                         <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{record.totalHours || '-'}</td>
@@ -1264,15 +1561,15 @@ const MainFeature = () => {
             
             {/* Leave Requests */}
             <div className="p-6 sm:p-8 bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm rounded-3xl border border-surface-200 dark:border-surface-700">
-              <h3 className="text-xl sm:text-2xl font-semibold text-surface-900 dark:text-surface-100 mb-6">
+            <div key={request.Id} className="p-4 bg-surface-50 dark:bg-surface-700/50 rounded-2xl">
                 Leave Requests
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <h4 className="font-semibold text-surface-900 dark:text-surface-100">{getEmployeeName(request.employee)}</h4>
                 {leaveRequests.map((request) => (
                   <div key={request.id} className="p-4 bg-surface-50 dark:bg-surface-700/50 rounded-2xl">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h4 className="font-semibold text-surface-900 dark:text-surface-100">{request.employeeName}</h4>
+                  onChange={(e) => handleLeaveStatusChange(request.Id, e.target.value)}
                         <p className="text-sm text-surface-600 dark:text-surface-400">{request.leaveType}</p>
                       </div>
                       <select
@@ -1284,7 +1581,7 @@ const MainFeature = () => {
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
                       </select>
-                    </div>
+                    {formatDate(request.startDate)} - {formatDate(request.endDate)}
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center space-x-2">
                         <ApperIcon name="Calendar" className="w-4 h-4 text-surface-400" />
@@ -1381,7 +1678,7 @@ const MainFeature = () => {
                     </div>
                     <h3 className="font-semibold text-surface-900 dark:text-surface-100">
                       {report.title}
-                    </h3>
+        { title: "Employee Directory Report", description: "Complete list of all employees with details", icon: "FileText", action: "Generate" },
                   </div>
                   <p className="text-sm text-surface-600 dark:text-surface-400 mb-4">
                     {report.description}
@@ -1456,8 +1753,8 @@ const MainFeature = () => {
                     type="tel"
                     value={createForm.phone}
                     onChange={(e) => setCreateForm({...createForm, phone: e.target.value})}
+              disabled={creatingEmployee}
                     className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
-                    placeholder="Enter phone number"
                   />
                 </div>
                 
@@ -1519,7 +1816,7 @@ const MainFeature = () => {
         >
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+              disabled={creatingEmployee}>
             className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl"
           >
             <div className="p-6">
@@ -1538,8 +1835,8 @@ const MainFeature = () => {
                   <label className="block text-sm font-medium text-surface-700 mb-2">Project Name *</label>
                   <input
                     type="text"
-                    value={createProjectForm.name}
-                    onChange={(e) => setCreateProjectForm({...createProjectForm, name: e.target.value})}
+              onClick={() => setShowCreateProjectModal(false)}
+              className="text-surface-400 hover:text-surface-600 transition-colors"
                     className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                     placeholder="Enter project name"
                   />
@@ -1627,7 +1924,7 @@ const MainFeature = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+              disabled={creatingProject}>
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setEditingEmployee(null)}
           >
@@ -1758,5 +2055,5 @@ const MainFeature = () => {
     </motion.div>
   )
 }
-
+                  disabled={updatingEmployee}>
 export default MainFeature
