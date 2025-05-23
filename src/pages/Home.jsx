@@ -45,13 +45,10 @@ const Home = () => {
         <nav className="flex items-center justify-between max-w-7xl mx-auto">
           <motion.div 
             onClick={() => navigate('/')}
-            className="flex items-center space-x-3 cursor-pointer"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
             className="flex items-center space-x-3"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.6 }} 
           >
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-glow">
               <ApperIcon name="Users" className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -97,8 +94,8 @@ const Home = () => {
               name={darkMode ? "Sun" : "Moon"} 
               className="w-5 h-5 sm:w-6 sm:h-6 text-surface-700 dark:text-surface-300" 
             />
+            </motion.button>
           </div>
-          </motion.button>
         </nav>
       </header>
 
