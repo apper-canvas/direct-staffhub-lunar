@@ -6,6 +6,108 @@ import ApperIcon from './ApperIcon'
 
 const MainFeature = () => {
   const [activeTab, setActiveTab] = useState('employee')
+  const [attendanceRecords, setAttendanceRecords] = useState([
+    {
+      id: 1,
+      employeeId: 1,
+      employeeName: "Sarah Johnson",
+      date: "2024-01-15",
+      clockIn: "09:00",
+      clockOut: "17:30",
+      breakTime: "60",
+      totalHours: "7.5",
+      status: "present"
+    },
+    {
+      id: 2,
+      employeeId: 2,
+      employeeName: "Michael Chen",
+      date: "2024-01-15",
+      clockIn: "08:45",
+      clockOut: "17:15",
+      breakTime: "45",
+      totalHours: "7.75",
+      status: "present"
+    },
+    {
+      id: 3,
+      employeeId: 3,
+      employeeName: "Emily Rodriguez",
+      date: "2024-01-15",
+      clockIn: "",
+      clockOut: "",
+      breakTime: "",
+      totalHours: "",
+      status: "absent"
+    }
+  ])
+  
+  const [leaveRequests, setLeaveRequests] = useState([
+    {
+      id: 1,
+      employeeId: 1,
+      employeeName: "Sarah Johnson",
+      leaveType: "Annual Leave",
+      startDate: "2024-01-20",
+      endDate: "2024-01-22",
+      days: 3,
+      reason: "Family vacation",
+      status: "approved"
+    },
+    {
+      id: 2,
+      employeeId: 2,
+      employeeName: "Michael Chen",
+      leaveType: "Sick Leave",
+      startDate: "2024-01-18",
+      endDate: "2024-01-18",
+      days: 1,
+      reason: "Medical appointment",
+      status: "pending"
+    }
+  ])
+  
+  const [attendanceFilter, setAttendanceFilter] = useState({
+    date: format(new Date(), 'yyyy-MM-dd'),
+    employee: 'all',
+    status: 'all'
+  })
+  
+  const [newLeaveRequest, setNewLeaveRequest] = useState({
+    employeeId: '',
+    leaveType: '',
+    startDate: '',
+    endDate: '',
+    reason: ''
+  })
+  
+  const [showLeaveForm, setShowLeaveForm] = useState(false)
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const [clockedInEmployees, setClockedInEmployees] = useState(new Set())
+  
+  // Update current time every second
+  useState(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+  
+  const leaveTypes = ['Annual Leave', 'Sick Leave', 'Personal Leave', 'Maternity Leave', 'Paternity Leave', 'Emergency Leave']
+  const attendanceStatuses = ['present', 'absent', 'late', 'half-day']
+  const attendanceStatusColors = {
+    present: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+    absent: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+    late: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+    'half-day': 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+  }
+  
+  const leaveStatusColors = {
+    approved: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+    pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+    rejected: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+  }
+  
   const [employees, setEmployees] = useState([
     {
       id: 1,
@@ -161,8 +263,153 @@ const MainFeature = () => {
     return matchesSearch && matchesDepartment
   })
 
+  const handleClockIn = (employeeId) => {
+    const employee = employees.find(emp => emp.id === employeeId)
+    const currentDate = format(new Date(), 'yyyy-MM-dd')
+    const currentTimeStr = format(new Date(), 'HH:mm')
+    
+    // Check if already clocked in today
+    const existingRecord = attendanceRecords.find(record => 
+      record.employeeId === employeeId && record.date === currentDate
+    )
+    
+    if (existingRecord && existingRecord.clockIn) {
+      toast.warning(`${employee.firstName} ${employee.lastName} already clocked in today`)
+      return
+    }
+    
+    if (existingRecord) {
+      // Update existing record
+      setAttendanceRecords(prev => prev.map(record =>
+        record.id === existingRecord.id
+          ? { ...record, clockIn: currentTimeStr, status: 'present' }
+          : record
+      ))
+    } else {
+      // Create new record
+      const newRecord = {
+        id: Date.now(),
+        employeeId,
+        employeeName: `${employee.firstName} ${employee.lastName}`,
+        date: currentDate,
+        clockIn: currentTimeStr,
+        clockOut: '',
+        breakTime: '',
+        totalHours: '',
+        status: 'present'
+      }
+      setAttendanceRecords(prev => [...prev, newRecord])
+    }
+    
+    setClockedInEmployees(prev => new Set([...prev, employeeId]))
+    toast.success(`${employee.firstName} ${employee.lastName} clocked in successfully at ${currentTimeStr}`)
+  }
+  
+  const handleClockOut = (employeeId) => {
+    const employee = employees.find(emp => emp.id === employeeId)
+    const currentDate = format(new Date(), 'yyyy-MM-dd')
+    const currentTimeStr = format(new Date(), 'HH:mm')
+    
+    const existingRecord = attendanceRecords.find(record => 
+      record.employeeId === employeeId && record.date === currentDate
+    )
+    
+    if (!existingRecord || !existingRecord.clockIn) {
+      toast.error(`${employee.firstName} ${employee.lastName} must clock in first`)
+      return
+    }
+    
+    if (existingRecord.clockOut) {
+      toast.warning(`${employee.firstName} ${employee.lastName} already clocked out today`)
+      return
+    }
+    
+    // Calculate total hours
+    const clockInTime = new Date(`2024-01-01 ${existingRecord.clockIn}`)
+    const clockOutTime = new Date(`2024-01-01 ${currentTimeStr}`)
+    const diffMs = clockOutTime - clockInTime
+    const totalHours = (diffMs / (1000 * 60 * 60)).toFixed(2)
+    
+    setAttendanceRecords(prev => prev.map(record =>
+      record.id === existingRecord.id
+        ? { ...record, clockOut: currentTimeStr, totalHours }
+        : record
+    ))
+    
+    setClockedInEmployees(prev => {
+      const newSet = new Set(prev)
+      newSet.delete(employeeId)
+      return newSet
+    })
+    
+    toast.success(`${employee.firstName} ${employee.lastName} clocked out successfully at ${currentTimeStr}`)
+  }
+  
+  const handleLeaveRequest = (e) => {
+    e.preventDefault()
+    
+    if (!newLeaveRequest.employeeId || !newLeaveRequest.leaveType || !newLeaveRequest.startDate || !newLeaveRequest.endDate) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+    
+    const employee = employees.find(emp => emp.id === parseInt(newLeaveRequest.employeeId))
+    const startDate = new Date(newLeaveRequest.startDate)
+    const endDate = new Date(newLeaveRequest.endDate)
+    const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
+    
+    const leaveRequest = {
+      id: Date.now(),
+      ...newLeaveRequest,
+      employeeId: parseInt(newLeaveRequest.employeeId),
+      employeeName: `${employee.firstName} ${employee.lastName}`,
+      days,
+      status: 'pending'
+    }
+    
+    setLeaveRequests(prev => [...prev, leaveRequest])
+    setNewLeaveRequest({
+      employeeId: '',
+      leaveType: '',
+      startDate: '',
+      endDate: '',
+      reason: ''
+    })
+    setShowLeaveForm(false)
+    toast.success(`Leave request submitted for ${employee.firstName} ${employee.lastName}`)
+  }
+  
+  const handleLeaveStatusChange = (requestId, newStatus) => {
+    setLeaveRequests(prev => prev.map(request =>
+      request.id === requestId ? { ...request, status: newStatus } : request
+    ))
+    const request = leaveRequests.find(req => req.id === requestId)
+    toast.success(`Leave request for ${request.employeeName} ${newStatus}`)
+  }
+  
+  const filteredAttendanceRecords = attendanceRecords.filter(record => {
+    const matchesDate = !attendanceFilter.date || record.date === attendanceFilter.date
+    const matchesEmployee = attendanceFilter.employee === 'all' || record.employeeId === parseInt(attendanceFilter.employee)
+    const matchesStatus = attendanceFilter.status === 'all' || record.status === attendanceFilter.status
+    return matchesDate && matchesEmployee && matchesStatus
+  })
+  
+  const getTodaysAttendanceStats = () => {
+    const today = format(new Date(), 'yyyy-MM-dd')
+    const todayRecords = attendanceRecords.filter(record => record.date === today)
+    return {
+      total: employees.length,
+      present: todayRecords.filter(record => record.status === 'present').length,
+      absent: todayRecords.filter(record => record.status === 'absent').length,
+      late: todayRecords.filter(record => record.status === 'late').length
+    }
+  }
+  
+  const attendanceStats = getTodaysAttendanceStats()
+  
   const tabs = [
     { id: 'employee', label: 'Employee Directory', icon: 'Users' },
+    { id: 'attendance', label: 'Time & Attendance', icon: 'Clock' },
     { id: 'analytics', label: 'Analytics', icon: 'BarChart3' },
     { id: 'reports', label: 'Reports', icon: 'FileText' }
   ]
@@ -458,11 +705,335 @@ const MainFeature = () => {
           </motion.div>
         )}
 
-        {activeTab === 'analytics' && (
+        {activeTab === 'attendance' && (
           <motion.div
-            key="analytics"
+            key="attendance"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-6 sm:space-y-8"
+          >
+            {/* Current Time and Quick Stats */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="lg:col-span-1 p-6 bg-gradient-to-br from-primary to-secondary text-white rounded-3xl">
+                <div className="text-center">
+                  <div className="text-2xl sm:text-3xl font-bold mb-2">
+                    {format(currentTime, 'HH:mm:ss')}
+                  </div>
+                  <div className="text-sm opacity-90">
+                    {format(currentTime, 'EEEE, MMM dd, yyyy')}
+                  </div>
+                </div>
+              </div>
+              
+              {[
+                { title: "Present Today", value: attendanceStats.present, icon: "UserCheck", color: "from-green-500 to-green-600" },
+                { title: "Absent Today", value: attendanceStats.absent, icon: "UserX", color: "from-red-500 to-red-600" },
+                { title: "Late Today", value: attendanceStats.late, icon: "Clock", color: "from-yellow-500 to-yellow-600" }
+              ].map((stat, index) => (
+                <motion.div
+                  key={stat.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  className="p-6 bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm rounded-3xl border border-surface-200 dark:border-surface-700"
+                >
+                  <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-2xl flex items-center justify-center mb-4`}>
+                    <ApperIcon name={stat.icon} className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-2xl font-bold text-surface-900 dark:text-surface-100">
+                    {stat.value}
+                  </div>
+                  <div className="text-surface-600 dark:text-surface-400 text-sm">
+                    {stat.title}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Quick Clock In/Out */}
+            <div className="p-6 sm:p-8 bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm rounded-3xl border border-surface-200 dark:border-surface-700">
+              <h3 className="text-xl sm:text-2xl font-semibold text-surface-900 dark:text-surface-100 mb-6">
+                Quick Clock In/Out
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {employees.slice(0, 6).map((employee) => (
+                  <div key={employee.id} className="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-700/50 rounded-2xl">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={employee.avatar}
+                        alt={`${employee.firstName} ${employee.lastName}`}
+                        className="w-10 h-10 rounded-xl object-cover"
+                      />
+                      <div>
+                        <div className="font-medium text-surface-900 dark:text-surface-100 text-sm">
+                          {employee.firstName} {employee.lastName}
+                        </div>
+                        <div className="text-xs text-surface-600 dark:text-surface-400">
+                          {employee.department}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleClockIn(employee.id)}
+                        disabled={clockedInEmployees.has(employee.id)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                          clockedInEmployees.has(employee.id)
+                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                            : 'bg-green-500 text-white hover:bg-green-600'
+                        }`}
+                      >
+                        In
+                      </button>
+                      <button
+                        onClick={() => handleClockOut(employee.id)}
+                        disabled={!clockedInEmployees.has(employee.id)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                          !clockedInEmployees.has(employee.id)
+                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                            : 'bg-red-500 text-white hover:bg-red-600'
+                        }`}
+                      >
+                        Out
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+        {activeTab === 'analytics' && (
+            {/* Attendance Filters and Leave Request */}
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start lg:items-center justify-between">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full lg:w-auto">
+                <input
+                  type="date"
+                  value={attendanceFilter.date}
+                  onChange={(e) => setAttendanceFilter(prev => ({...prev, date: e.target.value}))}
+                  className="px-4 py-3 bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm border border-surface-200 dark:border-surface-700 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                />
+                
+                <select
+                  value={attendanceFilter.employee}
+                  onChange={(e) => setAttendanceFilter(prev => ({...prev, employee: e.target.value}))}
+                  className="px-4 py-3 bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm border border-surface-200 dark:border-surface-700 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                >
+                  <option value="all">All Employees</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
+                  ))}
+                </select>
+                
+                <select
+                  value={attendanceFilter.status}
+                  onChange={(e) => setAttendanceFilter(prev => ({...prev, status: e.target.value}))}
+                  className="px-4 py-3 bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm border border-surface-200 dark:border-surface-700 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                >
+                  <option value="all">All Status</option>
+                  {attendanceStatuses.map(status => (
+                    <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+          <motion.div
+              <motion.button
+                onClick={() => setShowLeaveForm(!showLeaveForm)}
+                className="flex items-center space-x-2 px-4 sm:px-6 py-3 bg-gradient-to-r from-secondary to-primary text-white font-semibold rounded-2xl hover:shadow-glow transition-all duration-300 w-full sm:w-auto justify-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <ApperIcon name={showLeaveForm ? "X" : "Calendar"} className="w-5 h-5" />
+                <span>{showLeaveForm ? 'Cancel' : 'Request Leave'}</span>
+              </motion.button>
+            </div>
+            key="analytics"
+            {/* Leave Request Form */}
+            <AnimatePresence>
+              {showLeaveForm && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="overflow-hidden"
+                >
+                  <div className="p-6 sm:p-8 bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm rounded-3xl border border-surface-200 dark:border-surface-700 shadow-soft">
+                    <h3 className="text-xl sm:text-2xl font-semibold text-surface-900 dark:text-surface-100 mb-6">
+                      Request Leave
+                    </h3>
+                    <form onSubmit={handleLeaveRequest} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                          Employee *
+                        </label>
+                        <select
+                          value={newLeaveRequest.employeeId}
+                          onChange={(e) => setNewLeaveRequest(prev => ({...prev, employeeId: e.target.value}))}
+                          className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                          required
+                        >
+                          <option value="">Select Employee</option>
+                          {employees.map(emp => (
+                            <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                          Leave Type *
+                        </label>
+                        <select
+                          value={newLeaveRequest.leaveType}
+                          onChange={(e) => setNewLeaveRequest(prev => ({...prev, leaveType: e.target.value}))}
+                          className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                          required
+                        >
+                          <option value="">Select Leave Type</option>
+                          {leaveTypes.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                          Start Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={newLeaveRequest.startDate}
+                          onChange={(e) => setNewLeaveRequest(prev => ({...prev, startDate: e.target.value}))}
+                          className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                          End Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={newLeaveRequest.endDate}
+                          onChange={(e) => setNewLeaveRequest(prev => ({...prev, endDate: e.target.value}))}
+                          className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                          Reason
+                        </label>
+                        <textarea
+                          value={newLeaveRequest.reason}
+                          onChange={(e) => setNewLeaveRequest(prev => ({...prev, reason: e.target.value}))}
+                          rows="3"
+                          className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                          placeholder="Optional reason for leave request"
+                        />
+                      </div>
+                      
+                      <div className="sm:col-span-2 lg:col-span-3 flex justify-end">
+                        <button
+                          type="submit"
+                          className="px-6 py-3 bg-gradient-to-r from-secondary to-primary text-white font-semibold rounded-xl hover:shadow-glow transition-all duration-300"
+                        >
+                          Submit Request
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            initial={{ opacity: 0, x: 20 }}
+            {/* Attendance Records */}
+            <div className="p-6 sm:p-8 bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm rounded-3xl border border-surface-200 dark:border-surface-700">
+              <h3 className="text-xl sm:text-2xl font-semibold text-surface-900 dark:text-surface-100 mb-6">
+                Attendance Records
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-surface-200 dark:border-surface-700">
+                      <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Employee</th>
+                      <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Date</th>
+                      <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Clock In</th>
+                      <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Clock Out</th>
+                      <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Total Hours</th>
+                      <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAttendanceRecords.map((record) => (
+                      <tr key={record.id} className="border-b border-surface-100 dark:border-surface-700/50 hover:bg-surface-50 dark:hover:bg-surface-700/30 transition-colors duration-200">
+                        <td className="py-3 px-4 text-surface-900 dark:text-surface-100">{record.employeeName}</td>
+                        <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{format(new Date(record.date), 'MMM dd, yyyy')}</td>
+                        <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{record.clockIn || '-'}</td>
+                        <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{record.clockOut || '-'}</td>
+                        <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{record.totalHours || '-'}</td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-lg ${attendanceStatusColors[record.status]}`}>
+                            {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            animate={{ opacity: 1, x: 0 }}
+            {/* Leave Requests */}
+            <div className="p-6 sm:p-8 bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm rounded-3xl border border-surface-200 dark:border-surface-700">
+              <h3 className="text-xl sm:text-2xl font-semibold text-surface-900 dark:text-surface-100 mb-6">
+                Leave Requests
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {leaveRequests.map((request) => (
+                  <div key={request.id} className="p-4 bg-surface-50 dark:bg-surface-700/50 rounded-2xl">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h4 className="font-semibold text-surface-900 dark:text-surface-100">{request.employeeName}</h4>
+                        <p className="text-sm text-surface-600 dark:text-surface-400">{request.leaveType}</p>
+                      </div>
+                      <select
+                        value={request.status}
+                        onChange={(e) => handleLeaveStatusChange(request.id, e.target.value)}
+                        className={`px-2 py-1 text-xs font-medium rounded-lg border-0 ${leaveStatusColors[request.status]} cursor-pointer`}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center space-x-2">
+                        <ApperIcon name="Calendar" className="w-4 h-4 text-surface-400" />
+                        <span className="text-surface-600 dark:text-surface-400">
+                          {format(new Date(request.startDate), 'MMM dd')} - {format(new Date(request.endDate), 'MMM dd, yyyy')}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <ApperIcon name="Clock" className="w-4 h-4 text-surface-400" />
+                        <span className="text-surface-600 dark:text-surface-400">{request.days} day{request.days > 1 ? 's' : ''}</span>
+                      </div>
+                      {request.reason && (
+                        <div className="flex items-start space-x-2">
+                          <ApperIcon name="FileText" className="w-4 h-4 text-surface-400 mt-0.5" />
+                          <span className="text-surface-600 dark:text-surface-400">{request.reason}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.4 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
