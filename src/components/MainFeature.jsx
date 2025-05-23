@@ -6,6 +6,61 @@ import ApperIcon from './ApperIcon'
 
 const MainFeature = () => {
   const [activeTab, setActiveTab] = useState('employee')
+  
+  const [employees, setEmployees] = useState([
+      progress: 65,
+      budget: 75000
+    },
+    {
+      id: 2,
+      name: "HR Analytics Dashboard",
+      description: "Build comprehensive analytics dashboard for HR metrics",
+      status: "planning",
+      priority: "medium",
+      startDate: "2024-02-01",
+      endDate: "2024-05-15",
+      teamMembers: [1, 3],
+      progress: 15,
+      budget: 45000
+    }
+  ])
+  const [showCreateProjectModal, setShowCreateProjectModal] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+    {
+      id: 1,
+      firstName: "Sarah",
+      lastName: "Johnson",
+      email: "sarah.johnson@staffhub.com",
+      department: "Engineering",
+      position: "Senior Developer",
+      status: "active",
+      hireDate: "2023-01-15",
+      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
+    },
+    {
+      id: 2,
+      firstName: "Michael",
+      lastName: "Chen",
+      email: "michael.chen@staffhub.com",
+      department: "Design",
+      position: "UX Designer",
+      status: "active",
+      hireDate: "2023-03-22",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+    },
+    {
+      id: 3,
+      firstName: "Emily",
+      lastName: "Rodriguez",
+      email: "emily.rodriguez@staffhub.com",
+      department: "Marketing",
+      position: "Marketing Manager",
+      status: "onLeave",
+      hireDate: "2022-11-08",
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
+    }
+  ])
+
   const [projects, setProjects] = useState([
     {
       id: 1,
@@ -32,36 +87,8 @@ const MainFeature = () => {
       budget: 45000
     }
   ])
-  const [showCreateProjectModal, setShowCreateProjectModal] = useState(false)
-  const [showCreateModal, setShowCreateModal] = useState(false)
+
   const [attendanceRecords, setAttendanceRecords] = useState([
-    {
-      id: 1,
-      employeeId: 1,
-      employeeName: "Sarah Johnson",
-      date: "2024-01-15",
-      clockIn: "09:00",
-      clockOut: "17:30",
-      breakTime: "60",
-      totalHours: "7.5",
-      status: "present"
-    },
-    {
-      id: 2,
-      employeeId: 2,
-      employeeName: "Michael Chen",
-      date: "2024-01-15",
-      clockIn: "08:45",
-      clockOut: "17:15",
-      breakTime: "45",
-      totalHours: "7.75",
-      status: "present"
-    },
-    {
-      id: 3,
-      employeeId: 3,
-      employeeName: "Emily Rodriguez",
-      date: "2024-01-15",
       clockIn: "",
       clockOut: "",
       breakTime: "",
@@ -71,35 +98,10 @@ const MainFeature = () => {
   ])
   
   const [leaveRequests, setLeaveRequests] = useState([
+    {
       id: 1,
-    name: '',
-    email: '',
-    phone: '',
-    department: '',
-    position: '',
-    startDate: ''
-  })
       employeeId: 1,
       employeeName: "Sarah Johnson",
-  const [createForm, setCreateForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    department: '',
-    position: '',
-    startDate: ''
-  })
-  
-  const [createProjectForm, setCreateProjectForm] = useState({
-    name: '',
-    description: '',
-    priority: 'medium',
-    startDate: '',
-    endDate: '',
-    teamMembers: [],
-    budget: ''
-  })
-
       leaveType: "Annual Leave",
       startDate: "2024-01-20",
       endDate: "2024-01-22",
@@ -119,12 +121,32 @@ const MainFeature = () => {
       status: "pending"
     }
   ])
-  
-  const [attendanceFilter, setAttendanceFilter] = useState({
-    date: format(new Date(), 'yyyy-MM-dd'),
-    employee: 'all',
-    status: 'all'
+
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    department: '',
+      employeeId: 1,
+      employeeName: "Sarah Johnson",
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    department: '',
+    position: '',
+    startDate: ''
   })
+  const [createProjectForm, setCreateProjectForm] = useState({
+    name: '',
+    description: '',
+    priority: 'medium',
+    startDate: '',
+    endDate: '',
+    teamMembers: [],
+    budget: ''
+  })
+
   
   const [newLeaveRequest, setNewLeaveRequest] = useState({
     employeeId: '',
@@ -132,6 +154,12 @@ const MainFeature = () => {
     startDate: '',
     endDate: '',
     reason: ''
+  })
+  
+  const [attendanceFilter, setAttendanceFilter] = useState({
+    date: format(new Date(), 'yyyy-MM-dd'),
+    employee: 'all',
+    status: 'all'
   })
   
   const [showLeaveForm, setShowLeaveForm] = useState(false)
@@ -161,51 +189,6 @@ const MainFeature = () => {
     rejected: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
   }
   
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      firstName: "Sarah",
-      lastName: "Johnson",
-      email: "sarah.johnson@staffhub.com",
-      department: "Engineering",
-      position: "Senior Developer",
-      status: "active",
-      hireDate: "2023-01-15",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
-    },
-    {
-      id: 2,
-    if (!createForm.name || !createForm.email || !createForm.department) {
-      toast.error('Please fill in all required fields')
-      return
-    }
-
-    const newEmployee = {
-      id: employees.length + 1,
-      name: createForm.name,
-      email: createForm.email,
-      phone: createForm.phone,
-      department: createForm.department,
-      position: createForm.position,
-      salary: '$' + (Math.floor(Math.random() * 50000) + 50000),
-      startDate: createForm.startDate || new Date().toISOString().split('T')[0],
-      status: 'active'
-    }
-
-    setEmployees([...employees, newEmployee])
-    setCreateForm({
-      name: '',
-      email: '',
-      phone: '',
-      department: '',
-      position: '',
-      startDate: ''
-    })
-    setShowCreateModal(false)
-    toast.success('Employee created successfully!')
-  }
-
-      firstName: "Michael",
   const handleCreateEmployee = () => {
     if (!createForm.name || !createForm.email || !createForm.department) {
       toast.error('Please fill in all required fields')
@@ -217,8 +200,6 @@ const MainFeature = () => {
       name: createForm.name,
       email: createForm.email,
       phone: createForm.phone,
-      department: createForm.department,
-      position: createForm.position,
       salary: '$' + (Math.floor(Math.random() * 50000) + 50000),
       startDate: createForm.startDate || new Date().toISOString().split('T')[0],
       status: 'active'
@@ -259,19 +240,6 @@ const MainFeature = () => {
     toast.success('Project created successfully!')
   }
 
-      lastName: "Chen",
-      email: "michael.chen@staffhub.com",
-      department: "Design",
-      position: "UX Designer",
-      status: "active",
-      hireDate: "2023-03-22",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-    },
-    {
-      id: 3,
-      firstName: "Emily",
-      lastName: "Rodriguez",
-      email: "emily.rodriguez@staffhub.com",
       department: "Marketing",
       position: "Marketing Manager",
       status: "onLeave",
@@ -383,7 +351,6 @@ const MainFeature = () => {
     setEditingEmployee(null)
     setEditForm({ firstName: '', lastName: '', email: '', department: '', position: '', hireDate: '' })
     toast.success(`Employee ${editForm.firstName} ${editForm.lastName} updated successfully!`)
-        className="max-w-7xl mx-auto bg-white rounded-3xl shadow-soft p-8 mt-4"
 
   const handleStatusChange = (id, newStatus) => {
     setEmployees(prev => prev.map(emp => 
@@ -1244,8 +1211,6 @@ const MainFeature = () => {
                       
                       <div className="sm:col-span-2">
                         <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-      {/* Create Employee Modal */}
-                    Start Date
         <motion.div 
           initial={{ opacity: 0 }}
                     type="date"
@@ -1294,8 +1259,6 @@ const MainFeature = () => {
                 </div>
                           Reason
                 <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-2">
-                    Phone Number
                   </label>
                   <input
                     type="tel"
@@ -1336,6 +1299,7 @@ const MainFeature = () => {
                 </div>
                         <textarea
                 <div>
+                          Reason
                   <label className="block text-sm font-medium text-surface-700 mb-2">
                     Position
                   </label>
@@ -1349,6 +1313,7 @@ const MainFeature = () => {
                 </div>
                           value={newLeaveRequest.reason}
               </div>
+                        </label>
               
               <div className="flex gap-3 mt-6">
                 <button 
