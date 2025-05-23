@@ -35,6 +35,7 @@ const MainFeature = () => {
       employeeName: "Emily Rodriguez",
       date: "2024-01-15",
       clockIn: "",
+  const [showCreateModal, setShowCreateModal] = useState(false)
       clockOut: "",
       breakTime: "",
       totalHours: "",
@@ -45,6 +46,14 @@ const MainFeature = () => {
   const [leaveRequests, setLeaveRequests] = useState([
     {
       id: 1,
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    department: '',
+    position: '',
+    startDate: ''
+  })
       employeeId: 1,
       employeeName: "Sarah Johnson",
       leaveType: "Annual Leave",
@@ -122,6 +131,37 @@ const MainFeature = () => {
     },
     {
       id: 2,
+  const handleCreateEmployee = () => {
+    if (!createForm.name || !createForm.email || !createForm.department) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    const newEmployee = {
+      id: employees.length + 1,
+      name: createForm.name,
+      email: createForm.email,
+      phone: createForm.phone,
+      department: createForm.department,
+      position: createForm.position,
+      salary: '$' + (Math.floor(Math.random() * 50000) + 50000),
+      startDate: createForm.startDate || new Date().toISOString().split('T')[0],
+      status: 'active'
+    }
+
+    setEmployees([...employees, newEmployee])
+    setCreateForm({
+      name: '',
+      email: '',
+      phone: '',
+      department: '',
+      position: '',
+      startDate: ''
+    })
+    setShowCreateModal(false)
+    toast.success('Employee created successfully!')
+  }
+
       firstName: "Michael",
       lastName: "Chen",
       email: "michael.chen@staffhub.com",
@@ -243,11 +283,32 @@ const MainFeature = () => {
     setEmployees(prev => prev.map(emp => 
       emp.id === editingEmployee.id ? { ...emp, ...editForm } : emp
     ))
+      {/* Header Actions Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8 flex justify-between items-center"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-surface-800 mb-2">Employee Management Dashboard</h1>
+          <p className="text-surface-600">Manage your workforce efficiently</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setShowCreateModal(true)}
+          className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-semibold shadow-soft transition-all duration-200 flex items-center gap-2"
+        >
+          <UserPlus className="w-5 h-5" />
+          Create New Employee
+        </motion.button>
+      </motion.div>
+
     
     setEditingEmployee(null)
     setEditForm({ firstName: '', lastName: '', email: '', department: '', position: '', hireDate: '' })
     toast.success(`Employee ${editForm.firstName} ${editForm.lastName} updated successfully!`)
-  }
+        className="max-w-7xl mx-auto bg-white rounded-3xl shadow-soft p-8 mt-4"
 
   const handleStatusChange = (id, newStatus) => {
     setEmployees(prev => prev.map(emp => 
@@ -925,10 +986,130 @@ const MainFeature = () => {
                       
                       <div className="sm:col-span-2">
                         <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+      {/* Create Employee Modal */}
+      {showCreateModal && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        >
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-xl"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-surface-800">Create New Employee</h3>
+                <button 
+                  onClick={() => setShowCreateModal(false)}
+                  className="text-surface-400 hover:text-surface-600 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={createForm.name}
+                    onChange={(e) => setCreateForm({...createForm, name: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter full name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    value={createForm.email}
+                    onChange={(e) => setCreateForm({...createForm, email: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter email address"
+                  />
+                </div>
                           Reason
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={createForm.phone}
+                    onChange={(e) => setCreateForm({...createForm, phone: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter phone number"
+                  />
+                </div>
                         </label>
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">
+                    Department *
+                  </label>
+                  <select
+                    value={createForm.department}
+                    onChange={(e) => setCreateForm({...createForm, department: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map(dept => (
+                      <option key={dept} value={dept}>{dept.charAt(0).toUpperCase() + dept.slice(1)}</option>
+                    ))}
+                  </select>
+                </div>
                         <textarea
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">
+                    Position
+                  </label>
+                  <input
+                    type="text"
+                    value={createForm.position}
+                    onChange={(e) => setCreateForm({...createForm, position: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter position/title"
+                  />
+                </div>
                           value={newLeaveRequest.reason}
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={createForm.startDate}
+                    onChange={(e) => setCreateForm({...createForm, startDate: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button 
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 px-4 py-2 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleCreateEmployee}
+                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                >
+                  Create Employee
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
                           onChange={(e) => setNewLeaveRequest(prev => ({...prev, reason: e.target.value}))}
                           rows="3"
                           className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
