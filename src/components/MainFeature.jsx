@@ -54,10 +54,19 @@ const MainFeature = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterDepartment, setFilterDepartment] = useState('all')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [editingEmployee, setEditingEmployee] = useState(null)
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    department: '',
 
   const departments = ['Engineering', 'Design', 'Marketing', 'Sales', 'HR', 'Finance']
   const statusColors = {
     active: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+    position: '',
+    hireDate: ''
+  })
     onLeave: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
     terminated: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
   }
@@ -100,6 +109,41 @@ const MainFeature = () => {
     const employee = employees.find(emp => emp.id === id)
     setEmployees(prev => prev.filter(emp => emp.id !== id))
     toast.success(`Employee ${employee.firstName} ${employee.lastName} removed successfully`)
+  }
+
+  const handleEditEmployee = (employee) => {
+    setEditingEmployee(employee)
+    setEditForm({
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      email: employee.email,
+      department: employee.department,
+      position: employee.position,
+      hireDate: employee.hireDate
+    })
+  }
+
+  const handleUpdateEmployee = (e) => {
+    e.preventDefault()
+    
+    if (!editForm.firstName || !editForm.lastName || !editForm.email || !editForm.department || !editForm.position) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    const emailExists = employees.some(emp => emp.id !== editingEmployee.id && emp.email.toLowerCase() === editForm.email.toLowerCase())
+    if (emailExists) {
+      toast.error('Employee with this email already exists')
+      return
+    }
+
+    setEmployees(prev => prev.map(emp => 
+      emp.id === editingEmployee.id ? { ...emp, ...editForm } : emp
+    ))
+    
+    setEditingEmployee(null)
+    setEditForm({ firstName: '', lastName: '', email: '', department: '', position: '', hireDate: '' })
+    toast.success(`Employee ${editForm.firstName} ${editForm.lastName} updated successfully!`)
   }
 
   const handleStatusChange = (id, newStatus) => {
@@ -346,6 +390,12 @@ const MainFeature = () => {
                     </div>
                     
                     <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleEditEmployee(employee)}
+                        className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
+                      >
+                        <ApperIcon name="Edit" className="w-4 h-4" />
+                      </button>
                       <select
                         value={employee.status}
                         onChange={(e) => handleStatusChange(employee.id, e.target.value)}
@@ -492,6 +542,141 @@ const MainFeature = () => {
                 </motion.div>
               ))}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Employee Modal */}
+      <AnimatePresence>
+        {editingEmployee && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setEditingEmployee(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white/95 dark:bg-surface-800/95 backdrop-blur-sm rounded-3xl border border-surface-200 dark:border-surface-700 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 sm:p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl sm:text-2xl font-semibold text-surface-900 dark:text-surface-100">
+                    Edit Employee Details
+                  </h3>
+                  <button
+                    onClick={() => setEditingEmployee(null)}
+                    className="p-2 text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors duration-200"
+                  >
+                    <ApperIcon name="X" className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleUpdateEmployee} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                      First Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.firstName}
+                      onChange={(e) => setEditForm(prev => ({...prev, firstName: e.target.value}))}
+                      className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                      Last Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.lastName}
+                      onChange={(e) => setEditForm(prev => ({...prev, lastName: e.target.value}))}
+                      className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm(prev => ({...prev, email: e.target.value}))}
+                      className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                      Department *
+                    </label>
+                    <select
+                      value={editForm.department}
+                      onChange={(e) => setEditForm(prev => ({...prev, department: e.target.value}))}
+                      className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                      required
+                    >
+                      <option value="">Select Department</option>
+                      {departments.map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                      Position *
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.position}
+                      onChange={(e) => setEditForm(prev => ({...prev, position: e.target.value}))}
+                      className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                      Hire Date
+                    </label>
+                    <input
+                      type="date"
+                      value={editForm.hireDate}
+                      onChange={(e) => setEditForm(prev => ({...prev, hireDate: e.target.value}))}
+                      className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
+                    />
+                  </div>
+                  
+                  <div className="sm:col-span-2 flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setEditingEmployee(null)}
+                      className="px-6 py-3 bg-surface-200 dark:bg-surface-700 text-surface-900 dark:text-surface-100 font-medium rounded-xl hover:bg-surface-300 dark:hover:bg-surface-600 transition-all duration-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-xl hover:shadow-glow transition-all duration-300"
+                    >
+                      Update Employee
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
