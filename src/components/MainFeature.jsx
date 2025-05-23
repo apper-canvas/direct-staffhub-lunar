@@ -803,7 +803,7 @@ const MainFeature = () => {
                 ))}
               </div>
             </div>
-        {activeTab === 'analytics' && (
+            
             {/* Attendance Filters and Leave Request */}
             <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start lg:items-center justify-between">
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full lg:w-auto">
@@ -836,7 +836,7 @@ const MainFeature = () => {
                   ))}
                 </select>
               </div>
-          <motion.div
+              
               <motion.button
                 onClick={() => setShowLeaveForm(!showLeaveForm)}
                 className="flex items-center space-x-2 px-4 sm:px-6 py-3 bg-gradient-to-r from-secondary to-primary text-white font-semibold rounded-2xl hover:shadow-glow transition-all duration-300 w-full sm:w-auto justify-center"
@@ -847,7 +847,7 @@ const MainFeature = () => {
                 <span>{showLeaveForm ? 'Cancel' : 'Request Leave'}</span>
               </motion.button>
             </div>
-            key="analytics"
+            
             {/* Leave Request Form */}
             <AnimatePresence>
               {showLeaveForm && (
@@ -949,7 +949,7 @@ const MainFeature = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-            initial={{ opacity: 0, x: 20 }}
+            
             {/* Attendance Records */}
             <div className="p-6 sm:p-8 bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm rounded-3xl border border-surface-200 dark:border-surface-700">
               <h3 className="text-xl sm:text-2xl font-semibold text-surface-900 dark:text-surface-100 mb-6">
@@ -986,7 +986,7 @@ const MainFeature = () => {
                 </table>
               </div>
             </div>
-            animate={{ opacity: 1, x: 0 }}
+            
             {/* Leave Requests */}
             <div className="p-6 sm:p-8 bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm rounded-3xl border border-surface-200 dark:border-surface-700">
               <h3 className="text-xl sm:text-2xl font-semibold text-surface-900 dark:text-surface-100 mb-6">
@@ -1034,6 +1034,12 @@ const MainFeature = () => {
             </div>
           </motion.div>
         )}
+
+        {activeTab === 'analytics' && (
+          <motion.div
+            key="analytics"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.4 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
