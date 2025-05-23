@@ -8,24 +8,6 @@ const MainFeature = () => {
   const [activeTab, setActiveTab] = useState('employee')
   
   const [employees, setEmployees] = useState([
-      progress: 65,
-      budget: 75000
-    },
-    {
-      id: 2,
-      name: "HR Analytics Dashboard",
-      description: "Build comprehensive analytics dashboard for HR metrics",
-      status: "planning",
-      priority: "medium",
-      startDate: "2024-02-01",
-      endDate: "2024-05-15",
-      teamMembers: [1, 3],
-      progress: 15,
-      budget: 45000
-    }
-  ])
-  const [showCreateProjectModal, setShowCreateProjectModal] = useState(false)
-  const [showCreateModal, setShowCreateModal] = useState(false)
     {
       id: 1,
       firstName: "Sarah",
@@ -89,6 +71,22 @@ const MainFeature = () => {
   ])
 
   const [attendanceRecords, setAttendanceRecords] = useState([
+    {
+      id: 1,
+      employeeId: 1,
+      employeeName: "Sarah Johnson",
+      date: "2024-01-15",
+      clockIn: "09:00",
+      clockOut: "17:30",
+      breakTime: "01:00",
+      totalHours: "7.5",
+      status: "present"
+    },
+    {
+      id: 2,
+      employeeId: 2,
+      employeeName: "Michael Chen",
+      date: "2024-01-15",
       clockIn: "",
       clockOut: "",
       breakTime: "",
@@ -122,13 +120,9 @@ const MainFeature = () => {
     }
   ])
 
-  const [createForm, setCreateForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    department: '',
-      employeeId: 1,
-      employeeName: "Sarah Johnson",
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showCreateProjectModal, setShowCreateProjectModal] = useState(false)
+
   const [createForm, setCreateForm] = useState({
     name: '',
     email: '',
@@ -137,6 +131,7 @@ const MainFeature = () => {
     position: '',
     startDate: ''
   })
+
   const [createProjectForm, setCreateProjectForm] = useState({
     name: '',
     description: '',
@@ -147,7 +142,6 @@ const MainFeature = () => {
     budget: ''
   })
 
-  
   const [newLeaveRequest, setNewLeaveRequest] = useState({
     employeeId: '',
     leaveType: '',
@@ -167,13 +161,42 @@ const MainFeature = () => {
   const [clockedInEmployees, setClockedInEmployees] = useState(new Set())
   
   // Update current time every second
-  useState(() => {
+  useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date())
     }, 1000)
     return () => clearInterval(timer)
   }, [])
   
+  const [newEmployee, setNewEmployee] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    department: '',
+    position: '',
+    hireDate: format(new Date(), 'yyyy-MM-dd')
+  })
+
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterDepartment, setFilterDepartment] = useState('all')
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [editingEmployee, setEditingEmployee] = useState(null)
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    department: '',
+    position: '',
+    hireDate: ''
+  })
+
+  const departments = ['Engineering', 'Design', 'Marketing', 'Sales', 'HR', 'Finance']
+  const statusColors = {
+    active: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+    onLeave: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+    terminated: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+  }
+
   const leaveTypes = ['Annual Leave', 'Sick Leave', 'Personal Leave', 'Maternity Leave', 'Paternity Leave', 'Emergency Leave']
   const attendanceStatuses = ['present', 'absent', 'late', 'half-day']
   const attendanceStatusColors = {
@@ -188,7 +211,7 @@ const MainFeature = () => {
     pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
     rejected: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
   }
-  
+
   const handleCreateEmployee = () => {
     if (!createForm.name || !createForm.email || !createForm.department) {
       toast.error('Please fill in all required fields')
@@ -197,12 +220,14 @@ const MainFeature = () => {
 
     const newEmployee = {
       id: employees.length + 1,
-      name: createForm.name,
+      firstName: createForm.name.split(' ')[0],
+      lastName: createForm.name.split(' ').slice(1).join(' ') || 'N/A',
       email: createForm.email,
-      phone: createForm.phone,
-      salary: '$' + (Math.floor(Math.random() * 50000) + 50000),
-      startDate: createForm.startDate || new Date().toISOString().split('T')[0],
-      status: 'active'
+      department: createForm.department,
+      position: createForm.position || 'Employee',
+      status: 'active',
+      hireDate: createForm.startDate || new Date().toISOString().split('T')[0],
+      avatar: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000000)}?w=150&h=150&fit=crop&crop=face`
     }
 
     setEmployees([...employees, newEmployee])
@@ -238,44 +263,6 @@ const MainFeature = () => {
     })
     setShowCreateProjectModal(false)
     toast.success('Project created successfully!')
-  }
-
-      department: "Marketing",
-      position: "Marketing Manager",
-      status: "onLeave",
-      hireDate: "2022-11-08",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-    }
-  ])
-
-  const [newEmployee, setNewEmployee] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    department: '',
-    position: '',
-    hireDate: format(new Date(), 'yyyy-MM-dd')
-  })
-
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filterDepartment, setFilterDepartment] = useState('all')
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [editingEmployee, setEditingEmployee] = useState(null)
-  const [editForm, setEditForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    department: '',
-    position: '',
-    hireDate: ''
-  })
-
-
-  const departments = ['Engineering', 'Design', 'Marketing', 'Sales', 'HR', 'Finance']
-  const statusColors = {
-    active: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-    onLeave: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
-    terminated: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
   }
 
   const handleAddEmployee = (e) => {
@@ -351,6 +338,7 @@ const MainFeature = () => {
     setEditingEmployee(null)
     setEditForm({ firstName: '', lastName: '', email: '', department: '', position: '', hireDate: '' })
     toast.success(`Employee ${editForm.firstName} ${editForm.lastName} updated successfully!`)
+  }
 
   const handleStatusChange = (id, newStatus) => {
     setEmployees(prev => prev.map(emp => 
@@ -1211,238 +1199,10 @@ const MainFeature = () => {
                       
                       <div className="sm:col-span-2">
                         <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-        <motion.div 
-          initial={{ opacity: 0 }}
-                    type="date"
-                    value={createForm.startDate}
-                    onChange={(e) => setCreateForm({...createForm, startDate: e.target.value})}
-          <motion.div 
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-xl"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-surface-800">Create New Employee</h3>
-                <button 
-                  onClick={() => setShowCreateModal(false)}
-                  className="text-surface-400 hover:text-surface-600 transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-2">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={createForm.name}
-                    onChange={(e) => setCreateForm({...createForm, name: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Enter full name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-2">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    value={createForm.email}
-                    onChange={(e) => setCreateForm({...createForm, email: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Enter email address"
-                  />
-                </div>
                           Reason
-                <div>
-                  </label>
-                  <input
-                    type="tel"
-                    value={createForm.phone}
-                    onChange={(e) => setCreateForm({...createForm, phone: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Enter phone number"
-                  />
-                </div>
                         </label>
-                <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-2">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    value={createForm.phone}
-                    onChange={(e) => setCreateForm({...createForm, phone: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Enter phone number"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-2">
-                    Department *
-                  </label>
-                  <select
-                    value={createForm.department}
-                    onChange={(e) => setCreateForm({...createForm, department: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    <option value="">Select Department</option>
-                    {departments.map(dept => (
-                      <option key={dept} value={dept}>{dept.charAt(0).toUpperCase() + dept.slice(1)}</option>
-                    ))}
-                  </select>
-                </div>
                         <textarea
-                <div>
-                          Reason
-                  <label className="block text-sm font-medium text-surface-700 mb-2">
-                    Position
-                  </label>
-                  <input
-                    type="text"
-                    value={createForm.position}
-                    onChange={(e) => setCreateForm({...createForm, position: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Enter position/title"
-                  />
-                </div>
                           value={newLeaveRequest.reason}
-              </div>
-                        </label>
-              
-              <div className="flex gap-3 mt-6">
-                <button 
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleCreateEmployee}
-                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-                >
-                  Create Employee
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-
-      {/* Create Project Modal */}
-      {showCreateProjectModal && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-        >
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-surface-800">Create New Project</h3>
-                <button 
-                  onClick={() => setShowCreateProjectModal(false)}
-                  className="text-surface-400 hover:text-surface-600 transition-colors"
-                >
-                  <ApperIcon name="X" className="w-6 h-6" />
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-surface-700 mb-2">Project Name *</label>
-                  <input
-                    type="text"
-                    value={createProjectForm.name}
-                    onChange={(e) => setCreateProjectForm({...createProjectForm, name: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Enter project name"
-                  />
-                </div>
-                
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-surface-700 mb-2">Description *</label>
-                  <textarea
-                    value={createProjectForm.description}
-                    onChange={(e) => setCreateProjectForm({...createProjectForm, description: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    rows="3"
-                    placeholder="Enter project description"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-2">Priority</label>
-                  <select
-                    value={createProjectForm.priority}
-                    onChange={(e) => setCreateProjectForm({...createProjectForm, priority: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    {priorityLevels.map(level => (
-                      <option key={level} value={level}>{level.charAt(0).toUpperCase() + level.slice(1)}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-2">Budget</label>
-                  <input
-                    type="number"
-                    value={createProjectForm.budget}
-                    onChange={(e) => setCreateProjectForm({...createProjectForm, budget: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Enter budget amount"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-2">Start Date</label>
-                  <input
-                    type="date"
-                    value={createProjectForm.startDate}
-                    onChange={(e) => setCreateProjectForm({...createProjectForm, startDate: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-surface-700 mb-2">End Date</label>
-                  <input
-                    type="date"
-                    value={createProjectForm.endDate}
-                    onChange={(e) => setCreateProjectForm({...createProjectForm, endDate: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex gap-3 mt-6">
-                <button 
-                  onClick={() => setShowCreateProjectModal(false)}
-                  className="flex-1 px-4 py-2 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleCreateProject}
-                  className="flex-1 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary-dark transition-colors"
-                >
-                  Create Project
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
 
                           onChange={(e) => setNewLeaveRequest(prev => ({...prev, reason: e.target.value}))}
                           rows="3"
@@ -1638,6 +1398,228 @@ const MainFeature = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Create Employee Modal */}
+      {showCreateModal && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        >
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-xl"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-surface-800">Create New Employee</h3>
+                <button 
+                  onClick={() => setShowCreateModal(false)}
+                  className="text-surface-400 hover:text-surface-600 transition-colors"
+                >
+                  <ApperIcon name="X" className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={createForm.name}
+                    onChange={(e) => setCreateForm({...createForm, name: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter full name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    value={createForm.email}
+                    onChange={(e) => setCreateForm({...createForm, email: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter email address"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={createForm.phone}
+                    onChange={(e) => setCreateForm({...createForm, phone: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">
+                    Department *
+                  </label>
+                  <select
+                    value={createForm.department}
+                    onChange={(e) => setCreateForm({...createForm, department: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">
+                    Position
+                  </label>
+                  <input
+                    type="text"
+                    value={createForm.position}
+                    onChange={(e) => setCreateForm({...createForm, position: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter position/title"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button 
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 px-4 py-2 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleCreateEmployee}
+                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                >
+                  Create Employee
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Create Project Modal */}
+      {showCreateProjectModal && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        >
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-surface-800">Create New Project</h3>
+                <button 
+                  onClick={() => setShowCreateProjectModal(false)}
+                  className="text-surface-400 hover:text-surface-600 transition-colors"
+                >
+                  <ApperIcon name="X" className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-surface-700 mb-2">Project Name *</label>
+                  <input
+                    type="text"
+                    value={createProjectForm.name}
+                    onChange={(e) => setCreateProjectForm({...createProjectForm, name: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter project name"
+                  />
+                </div>
+                
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-surface-700 mb-2">Description *</label>
+                  <textarea
+                    value={createProjectForm.description}
+                    onChange={(e) => setCreateProjectForm({...createProjectForm, description: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    rows="3"
+                    placeholder="Enter project description"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">Priority</label>
+                  <select
+                    value={createProjectForm.priority}
+                    onChange={(e) => setCreateProjectForm({...createProjectForm, priority: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  >
+                    {priorityLevels.map(level => (
+                      <option key={level} value={level}>{level.charAt(0).toUpperCase() + level.slice(1)}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">Budget</label>
+                  <input
+                    type="number"
+                    value={createProjectForm.budget}
+                    onChange={(e) => setCreateProjectForm({...createProjectForm, budget: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter budget amount"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">Start Date</label>
+                  <input
+                    type="date"
+                    value={createProjectForm.startDate}
+                    onChange={(e) => setCreateProjectForm({...createProjectForm, startDate: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 mb-2">End Date</label>
+                  <input
+                    type="date"
+                    value={createProjectForm.endDate}
+                    onChange={(e) => setCreateProjectForm({...createProjectForm, endDate: e.target.value})}
+                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button 
+                  onClick={() => setShowCreateProjectModal(false)}
+                  className="flex-1 px-4 py-2 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleCreateProject}
+                  className="flex-1 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary-dark transition-colors"
+                >
+                  Create Project
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
 
       {/* Edit Employee Modal */}
       <AnimatePresence>
