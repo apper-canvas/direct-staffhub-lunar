@@ -1430,7 +1430,7 @@ const MainFeature = () => {
                     type="text"
                     value={createForm.name}
                     onChange={(e) => setCreateForm({...createForm, name: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                     placeholder="Enter full name"
                   />
                 </div>
@@ -1443,7 +1443,7 @@ const MainFeature = () => {
                     type="email"
                     value={createForm.email}
                     onChange={(e) => setCreateForm({...createForm, email: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                     placeholder="Enter email address"
                   />
                 </div>
@@ -1456,7 +1456,7 @@ const MainFeature = () => {
                     type="tel"
                     value={createForm.phone}
                     onChange={(e) => setCreateForm({...createForm, phone: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -1468,7 +1468,7 @@ const MainFeature = () => {
                   <select
                     value={createForm.department}
                     onChange={(e) => setCreateForm({...createForm, department: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                   >
                     <option value="">Select Department</option>
                     {departments.map(dept => (
@@ -1485,7 +1485,7 @@ const MainFeature = () => {
                     type="text"
                     value={createForm.position}
                     onChange={(e) => setCreateForm({...createForm, position: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                     placeholder="Enter position/title"
                   />
                 </div>
@@ -1494,7 +1494,7 @@ const MainFeature = () => {
               <div className="flex gap-3 mt-6">
                 <button 
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1540,7 +1540,7 @@ const MainFeature = () => {
                     type="text"
                     value={createProjectForm.name}
                     onChange={(e) => setCreateProjectForm({...createProjectForm, name: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                     placeholder="Enter project name"
                   />
                 </div>
@@ -1550,7 +1550,7 @@ const MainFeature = () => {
                   <textarea
                     value={createProjectForm.description}
                     onChange={(e) => setCreateProjectForm({...createProjectForm, description: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                     rows="3"
                     placeholder="Enter project description"
                   />
@@ -1561,7 +1561,7 @@ const MainFeature = () => {
                   <select
                     value={createProjectForm.priority}
                     onChange={(e) => setCreateProjectForm({...createProjectForm, priority: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                   >
                     {priorityLevels.map(level => (
                       <option key={level} value={level}>{level.charAt(0).toUpperCase() + level.slice(1)}</option>
@@ -1575,7 +1575,7 @@ const MainFeature = () => {
                     type="number"
                     value={createProjectForm.budget}
                     onChange={(e) => setCreateProjectForm({...createProjectForm, budget: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                     placeholder="Enter budget amount"
                   />
                 </div>
@@ -1586,7 +1586,7 @@ const MainFeature = () => {
                     type="date"
                     value={createProjectForm.startDate}
                     onChange={(e) => setCreateProjectForm({...createProjectForm, startDate: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                   />
                 </div>
                 
@@ -1596,7 +1596,7 @@ const MainFeature = () => {
                     type="date"
                     value={createProjectForm.endDate}
                     onChange={(e) => setCreateProjectForm({...createProjectForm, endDate: e.target.value})}
-                    className="w-full px-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                   />
                 </div>
               </div>
@@ -1604,7 +1604,7 @@ const MainFeature = () => {
               <div className="flex gap-3 mt-6">
                 <button 
                   onClick={() => setShowCreateProjectModal(false)}
-                  className="flex-1 px-4 py-2 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
