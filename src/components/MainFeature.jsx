@@ -929,7 +929,6 @@ const MainFeature = () => {
                           required
                         />
                       </div>
-            key={employee.Id}
                       <div>
                         <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
                           Last Name *
@@ -964,24 +963,23 @@ const MainFeature = () => {
                           value={newEmployee.department}
                           onChange={(e) => setNewEmployee(prev => ({...prev, department: e.target.value}))}
                           className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
-                          required
-                  className={`p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200 ${updatingEmployee ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          required>
                           <option value="">Select Department</option>
                           {departments.map(dept => (
                             <option key={dept} value={dept}>{dept}</option>
                           ))}
                         </select>
-                  onChange={(e) => handleStatusChange(employee.Id, e.target.value)}
+                      </div>
                       
                       <div>
-                  <option value="active">Active</option>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
                           Position *
                         </label>
                         <input
                           type="text"
                           value={newEmployee.position}
-                  onClick={() => handleDeleteEmployee(employee.Id)}
-                  className={`p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200 ${deletingEmployee ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          onChange={(e) => setNewEmployee(prev => ({...prev, position: e.target.value}))}
+                          className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
                           required
                         />
                       </div>
@@ -1016,7 +1014,7 @@ const MainFeature = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
               {filteredEmployees.map((employee, index) => (
                 <motion.div
-                  key={employee.id}
+                  key={employee.Id || index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
@@ -1045,12 +1043,13 @@ const MainFeature = () => {
     {loadingProjects && (
       <div className="flex justify-center p-8">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
         { title: "In Progress", value: projects?.filter(p => p.status === 'in-progress')?.length || 0, icon: "Play", color: "from-green-500 to-green-600" },
                       >
                         <ApperIcon name="Edit" className="w-4 h-4" />
                       </button>
-                      <select
-                        value={employee.status}
+                        value={employee.status || 'active'}
+                        onChange={(e) => handleStatusChange(employee.Id, e.target.value)}
                         onChange={(e) => handleStatusChange(employee.id, e.target.value)}
                         className={`px-2 py-1 text-xs font-medium rounded-lg border-0 ${statusColors[employee.status]} cursor-pointer`}
                       >
@@ -1059,8 +1058,8 @@ const MainFeature = () => {
                         <option value="terminated">Terminated</option>
                       </select>
                       
-                      <button
-                        onClick={() => handleDeleteEmployee(employee.id)}
+                        onClick={() => handleDeleteEmployee(employee.Id)}
+                        className={`p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200 ${deletingEmployee ? 'opacity-50 cursor-not-allowed' : ''}`}
                         className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
                       >
                         <ApperIcon name="Trash2" className="w-4 h-4" />
@@ -1071,8 +1070,9 @@ const MainFeature = () => {
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center space-x-2">
                       <ApperIcon name="Mail" className="w-4 h-4 text-surface-400" />
-        <motion.div
+                      <span className="text-surface-600 dark:text-surface-400">
                         {employee.email}
+                      </span>
                       </span>
                       </div>
                     <div className="flex items-center space-x-2">
@@ -1150,7 +1150,7 @@ const MainFeature = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {projects.map((project, index) => (
                 <motion.div
-                  key={project.id}
+                  key={project.Id || index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
@@ -1180,14 +1180,10 @@ const MainFeature = () => {
                       <div 
                         className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-300"
                         style={{ width: `${project.progress}%` }}
-  >
-    {loadingAttendance && (
-      <div className="flex justify-center p-8">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    )}
-    
-    {attendanceError && <div className="bg-red-50 text-red-600 p-4 rounded-lg">{attendanceError}</div>}
+                      />
+                    </div>
+                    
+                    {attendanceError && <div className="bg-red-50 text-red-600 p-4 rounded-lg mt-2">{attendanceError}</div>}
                       />
                     </div>
                     
@@ -1240,7 +1236,7 @@ const MainFeature = () => {
                       </button>
                       <button
                         onClick={() => {
-                          setProjects(projects.filter(p => p.id !== project.id))
+                          setProjects(projects.filter(p => p.Id !== project.Id))
                           toast.success('Project deleted successfully!')
                         }}
                         className="px-3 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors duration-200"
@@ -1314,13 +1310,16 @@ const MainFeature = () => {
                 Quick Clock In/Out
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {employees.slice(0, 6).map((employee) => (
-                  <div key={employee.id} className="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-700/50 rounded-2xl">
+                {employees.slice(0, 6).map((employee, index) => (
+                  <div key={employee.Id || index} className="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-700/50 rounded-2xl">
                     <div className="flex items-center space-x-3">
                       <img
                         src={employee.avatar}
                         alt={`${employee.firstName} ${employee.lastName}`}
                         className="w-10 h-10 rounded-xl object-cover"
+                        onError={(e) => {
+                          e.target.src = `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face`
+                        }}
                       />
                       <div>
                         <div className="font-medium text-surface-900 dark:text-surface-100 text-sm">
@@ -1339,10 +1338,10 @@ const MainFeature = () => {
                           clockedInEmployees.has(employee.id)
                             ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                             : 'bg-green-500 text-white hover:bg-green-600'
-                        }`}
-                      >
+                        onClick={() => handleClockIn(employee.Id)}
+                        disabled={clockedInEmployees.has(employee.Id)}
                         In
-                      </button>
+                          clockedInEmployees.has(employee.Id)
                       <button
                         onClick={() => handleClockOut(employee.id)}
                         disabled={!clockedInEmployees.has(employee.id)}
@@ -1352,7 +1351,7 @@ const MainFeature = () => {
                             : 'bg-red-500 text-white hover:bg-red-600'
                         }`}
                       >
-                        Out
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
                       </button>
                     </div>
                   </div>
@@ -1376,8 +1375,8 @@ const MainFeature = () => {
                   className="px-4 py-3 bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm border border-surface-200 dark:border-surface-700 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
                 >
                   <option value="all">All Employees</option>
-                  {employees.map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
+                  {employees.map((emp, index) => (
+                    <option key={emp.Id || index} value={emp.Id}>{emp.firstName} {emp.lastName}</option>
                   ))}
                 </select>
                 
@@ -1430,8 +1429,8 @@ const MainFeature = () => {
                           required
                         >
                           <option value="">Select Employee</option>
-                          {employees.map(emp => (
-                            <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
+                          {employees.map((emp, index) => (
+                            <option key={emp.Id || index} value={emp.Id}>{emp.firstName} {emp.lastName}</option>
                           ))}
                         </select>
                       </div>
@@ -1485,7 +1484,6 @@ const MainFeature = () => {
                         </label>
                         <textarea
                           value={newLeaveRequest.reason}
-
                           onChange={(e) => setNewLeaveRequest(prev => ({...prev, reason: e.target.value}))}
                           rows="3"
                           className="w-full px-4 py-3 bg-white/60 dark:bg-surface-700/60 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
@@ -1517,24 +1515,23 @@ const MainFeature = () => {
                   <thead>
                     <tr className="border-b border-surface-200 dark:border-surface-700">
                       <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Employee</th>
-                      <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Date</th>
-                      <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Clock In</th>
-            {filteredAttendanceRecords?.map((record) => (
-                      <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Total Hours</th>
-                <td className="py-3 px-4 text-surface-900 dark:text-surface-100">{getEmployeeName(record.employee)}</td>
-                <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{formatDate(record.date)}</td>
+                       <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Date</th>
+                       <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Clock In</th>
+                       <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Clock Out</th>
+                       <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Total Hours</th>
+                       <th className="text-left py-3 px-4 font-semibold text-surface-900 dark:text-surface-100">Status</th>
                   </thead>
                   <tbody>
-                    {filteredAttendanceRecords.map((record) => (
-                      <tr key={record.id} className="border-b border-surface-100 dark:border-surface-700/50 hover:bg-surface-50 dark:hover:bg-surface-700/30 transition-colors duration-200">
-                        <td className="py-3 px-4 text-surface-900 dark:text-surface-100">{record.employeeName}</td>
-                    {record.status?.charAt(0).toUpperCase() + record.status?.slice(1)}
+                    {filteredAttendanceRecords.map((record, index) => (
+                      <tr key={record.Id || index} className="border-b border-surface-100 dark:border-surface-700/50 hover:bg-surface-50 dark:hover:bg-surface-700/30 transition-colors duration-200">
+                        <td className="py-3 px-4 text-surface-900 dark:text-surface-100">{getEmployeeName(record.employee)}</td>
+                        <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{formatDate(record.date)}</td>
                         <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{record.clockIn || '-'}</td>
                         <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{record.clockOut || '-'}</td>
                         <td className="py-3 px-4 text-surface-600 dark:text-surface-400">{record.totalHours || '-'}</td>
                         <td className="py-3 px-4">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-lg ${attendanceStatusColors[record.status]}`}>
-                            {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                          <span className={`px-2 py-1 text-xs font-medium rounded-lg ${attendanceStatusColors[record.status] || ''}`}>
+                            {record.status ? record.status.charAt(0).toUpperCase() + record.status.slice(1) : '-'}
                           </span>
                         </td>
                       </tr>
@@ -1546,21 +1543,23 @@ const MainFeature = () => {
             
             {/* Leave Requests */}
             <div className="p-6 sm:p-8 bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm rounded-3xl border border-surface-200 dark:border-surface-700">
-            <div key={request.Id} className="p-4 bg-surface-50 dark:bg-surface-700/50 rounded-2xl">
+           {/* Leave Requests */}
                 Leave Requests
-              </h3>
+              <h3 className="text-xl sm:text-2xl font-semibold text-surface-900 dark:text-surface-100 mb-6">
                 {leaveRequests.map((request) => (
                   <div key={request.id} className="p-4 bg-surface-50 dark:bg-surface-700/50 rounded-2xl">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
+              <div className="space-y-4">
+                {leaveRequests.map((request, index) => (
+                  <div key={request.Id || index} className="p-4 bg-surface-50 dark:bg-surface-700/50 rounded-2xl">
                   onChange={(e) => handleLeaveStatusChange(request.Id, e.target.value)}
                         <p className="text-sm text-surface-600 dark:text-surface-400">{request.leaveType}</p>
-                      </div>
+                        <h4 className="font-medium text-surface-900 dark:text-surface-100">{getEmployeeName(request.employee)}</h4>
                         value={request.status}
                         onChange={(e) => handleLeaveStatusChange(request.id, e.target.value)}
-                        className={`px-2 py-1 text-xs font-medium rounded-lg border-0 ${leaveStatusColors[request.status]} cursor-pointer`}
-                      >
-                        <option value="pending">Pending</option>
+                      <select
+                        value={request.status || 'pending'}
+                        onChange={(e) => handleLeaveStatusChange(request.Id, e.target.value)}
+                        className={`px-2 py-1 text-xs font-medium rounded-lg border-0 ${leaveStatusColors[request.status] || ''} cursor-pointer`}
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
                       </select>
@@ -1582,8 +1581,9 @@ const MainFeature = () => {
                         </div>
                       )}
                     </div>
-                  </div>
+                 </div>
                 ))}
+              </div>
               </div>
             </div>
           </motion.div>
