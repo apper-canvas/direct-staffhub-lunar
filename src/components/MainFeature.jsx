@@ -65,7 +65,7 @@ const MainFeature = () => {
   })
 
 
-  const departments = ['Engineering', 'Design', 'Marketing', 'Sales', 'HR', 'Finance'];
+  const departments = ['Engineering', 'Design', 'Marketing', 'Sales', 'HR', 'Finance']
   const statusColors = {
     active: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
     onLeave: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
