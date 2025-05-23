@@ -762,11 +762,7 @@ const MainFeature = () => {
       }
     }
   };
-    const matchesEmployee = attendanceFilter.employee === 'all' || record.employeeId === parseInt(attendanceFilter.employee)
-    const matchesStatus = attendanceFilter.status === 'all' || record.status === attendanceFilter.status
-    const matchesStatus = attendanceFilter.status === 'all' || record.status === attendanceFilter.status;
-    return matchesDate && matchesEmployee && matchesStatus;
-  });
+
   const getTodaysAttendanceStats = () => {
     const today = format(new Date(), 'yyyy-MM-dd')
     const todayRecords = attendanceRecords.filter(record => record.date === today)
